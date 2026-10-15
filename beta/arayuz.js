@@ -1,5 +1,14 @@
 /* LUSORIA BETA — arayüz: kademeli menü, sürüm etiketi, bilgi penceresi. */
 (function (B) {
+  /* GitHub Pages yeni sürümü yayarken bir beta dosyası anlık 503 verebiliyor (2026-10-15
+     canlı denemede hesap.js yüklenmedi → nickname penceresi hiç çıkmadı). Hesap modülü
+     yoksa sayfa BİR kez yenilenir; yine yoksa hata loglanır. */
+  if (typeof B.nick !== 'function') {
+    if (!sessionStorage.getItem('betaModRetry')) { sessionStorage.setItem('betaModRetry', '1'); location.reload(); return; }
+    if (B.logError) B.logError('js', 'Beta hesap modülü yüklenemedi (hesap.js)', '');
+  } else {
+    sessionStorage.removeItem('betaModRetry');
+  }
   /* öğretici bitmeden menüde yalnız Oyna + Ayarlar (beta.css: html.beta-pretut) */
   B.refreshMenu = () => {
     document.documentElement.classList.toggle('beta-pretut', !localStorage.getItem('okeyTutDone'));
