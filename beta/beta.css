@@ -19,7 +19,8 @@ html.beta-pretut #btnQuit     { top: 607px; }
 .set-pane[data-pane="look"] .set-grid,
 .set-pane[data-pane="extra"] [data-cyc="colrev"],
 .set-pane[data-pane="extra"] .set-fw-card,
-.set-pane[data-pane="extra"] .set-go-row:has(#setFinalsReset) { display: none !important; }
+.set-pane[data-pane="extra"] .set-go-row:has(#setFinalsReset),
+.set-pane[data-pane="extra"] .set-go-row:has(#setDiscReset) { display: none !important; }   /* P105: keşif sıfırlama yalnız prototip testi */
 /* Görünüm'de tek kart kalıyor: prototipin iki sütunlu ızgarası (#settingsOv .set-two) onu sola
    yaslıyordu. Aynı özgüllükle ezilir; Oyun sekmesindeki dil kartıyla aynı genişlikte, ortada. */
 #settingsOv .set-pane[data-pane="look"] .set-two { grid-template-columns: 1fr; width: min(580px, 100%); }
