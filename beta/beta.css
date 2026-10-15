@@ -7,11 +7,11 @@
 #btnCollection { top: 607px; }
 #btnSettings   { top: 706px; }
 #btnQuit       { top: 805px; }
-/* Öğretici bitmeden: yalnız Oyna + Ayarlar */
+/* Öğretici bitmeden: yalnız Oyna + Ayarlar + Çıkış (kullanıcı 2026-10-15: Çıkış doğal olarak hep olsun) */
 html.beta-pretut #btnTutorial,
-html.beta-pretut #btnCollection,
-html.beta-pretut #btnQuit { display: none !important; }
+html.beta-pretut #btnCollection { display: none !important; }
 html.beta-pretut #btnSettings { top: 508px; }
+html.beta-pretut #btnQuit     { top: 607px; }
 
 /* Ayarlar: Oyun = yalnız dil; Görünüm = yalnız tema rengi; Ekstra = yalnız ipuçları */
 .set-pane[data-pane="game"] .set-grid,
