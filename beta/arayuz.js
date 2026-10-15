@@ -69,6 +69,9 @@
     b.addEventListener('click', (e) => { e.stopPropagation(); pop.classList.add('hidden'); showFeedback(); });
     pop.appendChild(b);
     /* dil değişince metin yenilensin: menü her açıldığında güncellenir */
-    new MutationObserver(() => { b.textContent = B.t('fbBtn'); }).observe(pop, { attributes: true, attributeFilter: ['class'] });
+    /* yalnız metin farklıysa yaz — her seferinde yazmak sahte "ekran değişti" üretiyor ve
+       günlüğün boşa tıklama ölçüsünü bozuyordu */
+    new MutationObserver(() => { const s = B.t('fbBtn'); if (b.textContent !== s) b.textContent = s; })
+      .observe(pop, { attributes: true, attributeFilter: ['class'] });
   }
 })(window.LUSORIA_BETA);

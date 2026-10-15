@@ -68,7 +68,9 @@
   }, true);
   window.addEventListener('unhandledrejection', (e) => {
     const r = e.reason;
-    B.logError('js', 'Promise: ' + ((r && r.message) || r), r && r.stack);
+    const msg = 'Promise: ' + ((r && r.message) || r);
+    /* tarayıcının ses cihazını açamaması oyun hatası değil (sessiz/çıkışsız cihaz) → ayrı tür */
+    B.logError(/audio device|AudioContext|play\(\) request|NotAllowedError/i.test(msg) ? 'device' : 'js', msg, r && r.stack);
   });
   const warn = console.warn;
   console.warn = function (...a) {
@@ -93,9 +95,23 @@
     }
   }).observe(document.body, { childList: true });
 
-  /* --- kafa karışıklığı: art arda boşa tıklama, hareketsizlik --- */
-  let lastInput = Date.now(), idleSaid = false;
-  const clicks = [];
+  /* --- kafa karışıklığı: art arda BOŞA tıklama, hareketsizlik ---
+     Yalnız İŞE YARAMAYAN tıklama sayılır: düğme devre dışıysa ya da tıklamadan sonraki
+     400 ms'de ekranda hiçbir şey değişmediyse. (İlk sürüm hızlı basışı yeterli sayıyordu;
+     2026-10-15 canlı logda sekmeler/tema okları/mod okları arasında gezinmek 5 yanlış alarm
+     üretti.) Değişim ölçüsü: düğüm ekleme/silme, metin, class/disabled/hidden — style hariç
+     (öğretici her karede style yazar, her tıklamayı "etkili" gösterirdi). */
+  let lastInput = Date.now(), idleSaid = false, domChanges = 0;
+  /* classList.add('hidden') zaten gizli öğede de kayıt üretir (ui.js her tıklamada açılır
+     menüleri böyle kapatıyor) → yalnız değeri GERÇEKTEN değişenler sayılır */
+  new MutationObserver((ms) => {
+    for (const m of ms) {
+      if (m.type === 'attributes' ? m.oldValue !== m.target.getAttribute(m.attributeName)
+        : m.type === 'characterData' ? m.oldValue !== m.target.data : true) { domChanges++; return; }
+    }
+  }).observe(document.body, { subtree: true, childList: true, characterData: true, characterDataOldValue: true,
+    attributes: true, attributeOldValue: true, attributeFilter: ['class', 'disabled', 'hidden'] });
+  const dead = [];
   const rageSaid = new Map();
   document.addEventListener('pointerdown', (e) => {
     lastInput = Date.now(); idleSaid = false;
@@ -103,13 +119,16 @@
     const b = el && el.closest && el.closest('button, .mp-card, .col-cat, .set-tab');
     if (!b) return;
     const sig = b.id ? '#' + b.id : (b.tagName.toLowerCase() + '.' + [...b.classList].slice(0, 2).join('.'));
-    const now = Date.now();
-    clicks.push({ sig, now });
-    while (clicks.length && now - clicks[0].now > 1500) clicks.shift();
-    if (clicks.filter((c) => c.sig === sig).length >= 3 && (!rageSaid.has(sig) || now - rageSaid.get(sig) > 10000)) {
-      rageSaid.set(sig, now);
-      B.event('rageClick', { target: sig, disabled: !!b.disabled });
-    }
+    const disabled = !!b.disabled, mark = domChanges, at = Date.now();
+    setTimeout(() => {
+      if (!disabled && domChanges !== mark) return;            // tıklama bir şey değiştirdi → boşa değil
+      dead.push({ sig, at });
+      while (dead.length && at - dead[0].at > 1500) dead.shift();
+      if (dead.filter((c) => c.sig === sig).length >= 3 && (!rageSaid.has(sig) || at - rageSaid.get(sig) > 10000)) {
+        rageSaid.set(sig, at);
+        B.event('rageClick', { target: sig, disabled });
+      }
+    }, 400);
   }, true);
   document.addEventListener('keydown', () => { lastInput = Date.now(); idleSaid = false; }, true);
   setInterval(() => {
