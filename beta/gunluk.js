@@ -1,0 +1,143 @@
+/* LUSORIA BETA — günlük. Firestore yazma bütçesi için:
+   · oturum olayları bellekte birikir; raund sonu / run sonu / sayfa gizlenince
+     paket olarak gider (en sık 10 sn'de bir);
+   · hatalar anında gider, oturum başına en çok 20, aynı mesaj bir kez;
+   · gönderilemeyen her şey 'betaQueue'ya (en çok 50) yazılır, bağlantı gelince gider. */
+(function (B) {
+  const sessionId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  let part = 0, buf = [], lastFlush = 0, errCount = 0, flushTimer = null;
+  const seenErr = new Set();
+  const base = () => ({ nick: B.nick ? B.nick() : null, version: B.version, build: B.build, at: Date.now() });
+  const device = () => ({ ua: navigator.userAgent, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, lang: navigator.language, gameLang: B.lang() });
+  const screenNow = () => {
+    for (const id of ['gameScreen', 'mapScreen', 'menuScreen']) {
+      const e = document.getElementById(id);
+      if (e && !e.classList.contains('hidden')) return id;
+    }
+    return '?';
+  };
+  B.snapshot = () => { const s = localStorage.getItem('okeySave'); return s ? s.slice(0, 300000) : null; };
+
+  /* --- çevrimdışı kuyruk --- */
+  const Q = 'betaQueue';
+  const readQ = () => { try { return JSON.parse(localStorage.getItem(Q) || '[]'); } catch (e) { return []; } };
+  const writeQ = (q) => { try { localStorage.setItem(Q, JSON.stringify(q.slice(-50))); } catch (e) {} };
+  B.sendDoc = (col, doc) => B.backend.add(col, doc).then(() => 'sent', () => {
+    const q = readQ(); q.push({ col, doc }); writeQ(q); return 'queued';
+  });
+  function drainQ() {
+    const q = readQ();
+    if (!q.length) return Promise.resolve();
+    writeQ([]);
+    return q.reduce((p, it) => p.then(() => B.sendDoc(it.col, it.doc)), Promise.resolve());
+  }
+
+  /* --- oturum paketleri --- */
+  B.event = (type, data) => { buf.push(Object.assign({ t: Date.now(), type, screen: screenNow() }, data || {})); };
+  B.flush = () => {
+    clearTimeout(flushTimer); flushTimer = null;
+    lastFlush = Date.now();
+    const p = drainQ();
+    if (!buf.length || !(B.nick && B.nick())) return p;   // ad seçilmeden oturum yazılmaz
+    const doc = Object.assign(base(), { sessionId, part, events: buf });
+    if (part === 0) doc.device = device();
+    part++; buf = [];
+    return p.then(() => B.sendDoc('sessions', doc));
+  };
+  const softFlush = () => {
+    if (flushTimer) return;
+    flushTimer = setTimeout(B.flush, Math.max(0, lastFlush + 10000 - Date.now()));
+  };
+
+  B.logError = (kind, message, stack, extra) => {
+    const sig = kind + '|' + message;
+    if (seenErr.has(sig) || errCount >= 20) return;
+    seenErr.add(sig); errCount++;
+    B.sendDoc('errors', Object.assign(base(), { kind, message: String(message).slice(0, 2000),
+      stack: String(stack || '').slice(0, 4000), screen: screenNow(), save: B.snapshot() }, extra || {}));
+  };
+
+  /* --- oyun hataları --- */
+  window.addEventListener('error', (e) => {
+    const t = e.target;
+    if (t && t !== window && t.tagName) {
+      if (t.tagName === 'IMG' || t.tagName === 'AUDIO') B.logError('ui', 'Yüklenemeyen dosya: ' + (t.currentSrc || t.src), '');
+      return;
+    }
+    B.logError('js', e.message, e.error && e.error.stack);
+  }, true);
+  window.addEventListener('unhandledrejection', (e) => {
+    const r = e.reason;
+    B.logError('js', 'Promise: ' + ((r && r.message) || r), r && r.stack);
+  });
+  const warn = console.warn;
+  console.warn = function (...a) {
+    if (typeof a[0] === 'string' && a[0].indexOf('⚠ Bütünlük denetimi') === 0) B.logError('integrity', a[0], '');
+    return warn.apply(this, a);
+  };
+
+  /* --- arayüz: ekrandan taşan pencere --- */
+  const OV = /\b(pk-ov|ep-ov|set-ov|rp-ov)\b/;
+  new MutationObserver((muts) => {
+    for (const m of muts) for (const n of m.addedNodes) {
+      if (n.nodeType !== 1 || !OV.test(n.className)) continue;
+      setTimeout(() => {
+        if (!document.body.contains(n)) return;
+        const box = n.firstElementChild;
+        if (!box) return;
+        const r = box.getBoundingClientRect();
+        if (r.width && (r.left < -4 || r.top < -4 || r.right > innerWidth + 4 || r.bottom > innerHeight + 4))
+          B.logError('ui', 'Pencere ekrandan taşıyor: ' + n.className, '',
+            { rect: [r.left, r.top, r.width, r.height].map(Math.round), vw: innerWidth, vh: innerHeight });
+      }, 500);
+    }
+  }).observe(document.body, { childList: true });
+
+  /* --- kafa karışıklığı: art arda boşa tıklama, hareketsizlik --- */
+  let lastInput = Date.now(), idleSaid = false;
+  const clicks = [];
+  const rageSaid = new Map();
+  document.addEventListener('pointerdown', (e) => {
+    lastInput = Date.now(); idleSaid = false;
+    const el = document.elementFromPoint(e.clientX, e.clientY) || e.target;
+    const b = el && el.closest && el.closest('button, .mp-card, .col-cat, .set-tab');
+    if (!b) return;
+    const sig = b.id ? '#' + b.id : (b.tagName.toLowerCase() + '.' + [...b.classList].slice(0, 2).join('.'));
+    const now = Date.now();
+    clicks.push({ sig, now });
+    while (clicks.length && now - clicks[0].now > 1500) clicks.shift();
+    if (clicks.filter((c) => c.sig === sig).length >= 3 && (!rageSaid.has(sig) || now - rageSaid.get(sig) > 10000)) {
+      rageSaid.set(sig, now);
+      B.event('rageClick', { target: sig, disabled: !!b.disabled });
+    }
+  }, true);
+  document.addEventListener('keydown', () => { lastInput = Date.now(); idleSaid = false; }, true);
+  setInterval(() => {
+    const scr = screenNow();
+    if (document.visibilityState !== 'visible' || idleSaid || (scr !== 'gameScreen' && scr !== 'mapScreen')) return;
+    if (Date.now() - lastInput > 60000) { idleSaid = true; B.event('idle', { sec: Math.round((Date.now() - lastInput) / 1000) }); }
+  }, 10000);
+
+  /* --- run akışı (Game.runLog) --- */
+  let sentRun = null, sentRounds = 0;
+  function collectRounds() {
+    try {
+      const L = typeof Game !== 'undefined' && Game.runLog && Game.runLog();
+      if (!L || !Array.isArray(L.rounds)) return;
+      if (L.start !== sentRun) { sentRun = L.start; sentRounds = 0; }
+      for (; sentRounds < L.rounds.length; sentRounds++) B.event('round', { r: JSON.parse(JSON.stringify(L.rounds[sentRounds])) });
+    } catch (e) {}
+  }
+  B.on('saved', () => { collectRounds(); softFlush(); });
+  B.on('runEnd', (d) => { collectRounds(); B.event('runEnd', d); B.flush(); });
+  B.on('runAbandoned', (d) => B.event('runAbandoned', d));
+  B.on('tutorialEnd', (d) => { B.event('tutorialEnd', d); softFlush(); });
+  B.on('modesOpened', (d) => B.event('modesOpened', d));
+  B.on('saveIncompatible', (d) => B.logError('save', 'Uyumsuz save: ' + d.message, d.stack));
+  B.on('loggedIn', () => B.flush());
+
+  window.addEventListener('online', () => B.flush());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') B.flush(); });
+  B.event('session', {});
+  setTimeout(B.flush, 3000);
+})(window.LUSORIA_BETA);

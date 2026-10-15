@@ -1,0 +1,53 @@
+/* LUSORIA BETA — yalnız TEST_SÜRÜM derlemesinde yüklenir (style.css'ten SONRA). */
+
+/* Trainer yok; menü konumları Figma adımıyla (99px) yeniden dizilir.
+   Prototip: Play 360 · Tutorial 508 · Trainer 607 · Collection 706 · Settings 805 · Quit 904 */
+#btnTrainer { display: none !important; }
+#btnTutorial   { top: 508px; }
+#btnCollection { top: 607px; }
+#btnSettings   { top: 706px; }
+#btnQuit       { top: 805px; }
+/* Öğretici bitmeden: yalnız Oyna + Ayarlar */
+html.beta-pretut #btnTutorial,
+html.beta-pretut #btnCollection,
+html.beta-pretut #btnQuit { display: none !important; }
+html.beta-pretut #btnSettings { top: 508px; }
+
+/* Ayarlar: Oyun = yalnız dil; Görünüm = yalnız tema rengi; Ekstra = yalnız ipuçları */
+.set-pane[data-pane="game"] .set-grid,
+.set-pane[data-pane="look"] [data-cyc="cspat"],
+.set-pane[data-pane="look"] .set-grid,
+.set-pane[data-pane="extra"] [data-cyc="colrev"],
+.set-pane[data-pane="extra"] .set-fw-card,
+.set-pane[data-pane="extra"] .set-go-row:has(#setFinalsReset) { display: none !important; }
+.set-pane[data-pane="look"] .set-two { grid-template-columns: 1fr; }
+
+/* Koleksiyon: Modlar + Müzik yok */
+.col-cat[data-cat="modes"], .col-cat[data-cat="music"] { display: none !important; }
+
+/* Sürüm etiketi (ana menü sağ alt) */
+#betaVer { position: absolute; right: 28px; bottom: 22px; font-family: var(--gm-font); font-size: 22px; opacity: .55; color: var(--gm-light); pointer-events: none; z-index: 5; }
+
+/* Beta pencereleri (pk-ov kalıbı üstüne yalnız form öğeleri) */
+.beta-ov { z-index: 3000; }
+.beta-box { max-width: 720px; width: min(720px, 92vw); text-align: center; }
+.beta-in { display: block; width: 100%; box-sizing: border-box; margin: 18px 0 6px; padding: 14px 18px;
+  font-family: var(--gm-font); font-size: 28px; color: var(--gm-light); background: rgba(0,0,0,.35);
+  border: 3px solid var(--gm-light); border-radius: 10px; outline: none; text-align: center; }
+.beta-in:focus { border-color: var(--gm-turn-on); }
+.beta-err { min-height: 26px; font-size: 20px; color: #ff8a7a; }
+.beta-link { margin-top: 18px; background: none; border: 0; color: var(--gm-light); text-decoration: underline;
+  font-family: var(--gm-font); font-size: 20px; cursor: pointer; opacity: .85; }
+.beta-notice { margin-top: 16px; font-size: 16px; opacity: .6; line-height: 1.35; }
+.beta-ta { display: block; width: 100%; box-sizing: border-box; min-height: 180px; margin: 14px 0; padding: 12px 14px;
+  font-family: var(--gm-font); font-size: 20px; color: var(--gm-light); background: rgba(0,0,0,.35);
+  border: 3px solid var(--gm-light); border-radius: 10px; resize: vertical; }
+.beta-msg { line-height: 1.4; padding: 22px 12px 10px; font-size: 22px; }
+.beta-two { display: flex; gap: 16px; }
+.beta-two > .ep-btn { flex: 1; min-height: 58px; }
+/* telefon: yazılar kutuya sığsın */
+@media (max-width: 600px) {
+  .beta-in { font-size: 20px; padding: 12px 10px; }
+  .beta-link { font-size: 16px; }
+  .beta-notice { font-size: 13px; }
+}
