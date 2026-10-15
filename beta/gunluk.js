@@ -139,16 +139,23 @@
 
   /* --- run akışı (Game.runLog) --- */
   let sentRun = null, sentRounds = 0;
-  function collectRounds() {
+  /* Raund kaydı raund BAŞINDA açılır (won: null), sonucu raund sonunda yazılır. Eskiden kayıt
+     açıldığı an gönderiliyordu → loglarda puan/hedef/sonuç hep boştu. Artık yalnız BİTMİŞ raund
+     gönderilir; run bitince (final) yarım kalan son raund da gider. */
+  function collectRounds(final) {
     try {
       const L = typeof Game !== 'undefined' && Game.runLog && Game.runLog();
       if (!L || !Array.isArray(L.rounds)) return;
       if (L.start !== sentRun) { sentRun = L.start; sentRounds = 0; }
-      for (; sentRounds < L.rounds.length; sentRounds++) B.event('round', { r: JSON.parse(JSON.stringify(L.rounds[sentRounds])) });
+      for (; sentRounds < L.rounds.length; sentRounds++) {
+        const r = L.rounds[sentRounds];
+        if (r.won == null && !final) break;
+        B.event('round', { r: JSON.parse(JSON.stringify(r)) });
+      }
     } catch (e) {}
   }
   B.on('saved', () => { collectRounds(); softFlush(); });
-  B.on('runEnd', (d) => { collectRounds(); B.event('runEnd', d); B.flush(); });
+  B.on('runEnd', (d) => { collectRounds(true); B.event('runEnd', d); B.flush(); });
   B.on('runAbandoned', (d) => B.event('runAbandoned', d));
   B.on('tutorialEnd', (d) => { B.event('tutorialEnd', d); softFlush(); });
   B.on('modesOpened', (d) => B.event('modesOpened', d));
