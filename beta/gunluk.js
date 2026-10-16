@@ -10,6 +10,8 @@
   const base = () => ({ nick: B.nick ? B.nick() : null, version: B.version, build: B.build, at: Date.now() });
   const device = () => ({ ua: navigator.userAgent, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, lang: navigator.language, gameLang: B.lang() });
   const screenNow = () => {
+    const so = document.getElementById('storeOverlay');   // P109 — store oyun ekranının üstünde, ayrı sayılır
+    if (so && !so.classList.contains('hidden')) return 'store';
     for (const id of ['gameScreen', 'mapScreen', 'menuScreen']) {
       const e = document.getElementById(id);
       if (e && !e.classList.contains('hidden')) return id;

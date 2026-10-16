@@ -48,7 +48,8 @@
     ov.querySelector('#betaFbTa').placeholder = B.t('fbPh');
     ov.querySelector('#betaFbCancel').textContent = B.t('fbCancel');
     ov.querySelector('#betaFbSend').textContent = B.t('fbSend');
-    const screen = ['gameScreen', 'mapScreen', 'menuScreen'].find((id) => !document.getElementById(id)?.classList.contains('hidden')) || '?';
+    const storeOn = !document.getElementById('storeOverlay')?.classList.contains('hidden');   // P109 — store ayrı sayılır
+    const screen = storeOn ? 'store' : (['gameScreen', 'mapScreen', 'menuScreen'].find((id) => !document.getElementById(id)?.classList.contains('hidden')) || '?');
     ov.querySelector('#betaFbCancel').addEventListener('click', () => ov.remove());
     ov.querySelector('#betaFbSend').addEventListener('click', () => {
       const text = ov.querySelector('#betaFbTa').value.trim();
@@ -60,7 +61,8 @@
     document.body.appendChild(ov);
     setTimeout(() => ov.querySelector('#betaFbTa').focus(), 50);
   }
-  for (const popId of ['menuPop', 'mapMenuPop']) {
+  /* P109 (kullanıcı: "beta sürümde store ekranında feedback veremiyorlar") — store'un kendi duraklat menüsü */
+  for (const popId of ['menuPop', 'mapMenuPop', 'storeMenuPop']) {
     const pop = document.getElementById(popId);
     if (!pop) continue;
     const b = document.createElement('button');
