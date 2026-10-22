@@ -44,6 +44,7 @@
     const doc = Object.assign(base(), { sessionId, part, events: buf });
     if (part === 0) doc.device = device();
     part++; buf = [];
+    if (B._markSent) B._markSent();   // denetim LG-04 — tampondaki raundlar artık pakette (ya da kuyrukta)
     return p.then(() => B.sendDoc('sessions', doc));
   };
   const softFlush = () => {
@@ -55,8 +56,11 @@
     const sig = kind + '|' + message;
     if (seenErr.has(sig) || errCount >= 20) return;
     seenErr.add(sig); errCount++;
+    /* denetim LG-11 — hata hangi oturumdan/cihazdan: sessionId oturum paketleriyle eşler,
+       dev kısa cihaz özeti (telefon mu masaüstü mü belli olsun) */
     B.sendDoc('errors', Object.assign(base(), { kind, message: String(message).slice(0, 2000),
-      stack: String(stack || '').slice(0, 4000), screen: screenNow(), save: B.snapshot() }, extra || {}));
+      stack: String(stack || '').slice(0, 4000), screen: screenNow(), save: B.snapshot(), sessionId,
+      dev: { w: innerWidth, h: innerHeight, dpr: devicePixelRatio, touch: navigator.maxTouchPoints || 0 } }, extra || {}));
   };
 
   /* --- oyun hataları --- */
@@ -141,6 +145,17 @@
 
   /* --- run akışı (Game.runLog) --- */
   let sentRun = null, sentRounds = 0;
+  /* denetim LG-04 — sayfa her açıldığında devam eden run'ın TÜM raundları yeniden gidiyordu
+     (sentRun bellekte sıfırlanıyordu; canlı logda raund olaylarının %33'ü kopyaydı). Gönderilen
+     raund sayısı run başlangıcıyla birlikte saklanır; işaret PAKET gönderilince (B.flush) yazılır,
+     böylece sayfa kapanıp tamponda kalan raund kaybolursa sonraki açılışta yine gider. İşareti
+     olmayan (eski derlemeden kalma) run'da bitmiş raundlar zaten gönderilmiş sayılır. */
+  const SENT = 'betaSentRounds';
+  const readSent = () => { try { return JSON.parse(localStorage.getItem(SENT) || 'null'); } catch (e) { return null; } };
+  B._markSent = () => {
+    if (sentRun == null) return;
+    try { localStorage.setItem(SENT, JSON.stringify({ start: sentRun, n: sentRounds })); } catch (e) {}
+  };
   /* Raund kaydı raund BAŞINDA açılır (won: null), sonucu raund sonunda yazılır. Eskiden kayıt
      açıldığı an gönderiliyordu → loglarda puan/hedef/sonuç hep boştu. Artık yalnız BİTMİŞ raund
      gönderilir; run bitince (final) yarım kalan son raund da gider. */
@@ -148,7 +163,13 @@
     try {
       const L = typeof Game !== 'undefined' && Game.runLog && Game.runLog();
       if (!L || !Array.isArray(L.rounds)) return;
-      if (L.start !== sentRun) { sentRun = L.start; sentRounds = 0; }
+      if (L.start !== sentRun) {
+        const m = readSent();
+        sentRun = L.start;
+        sentRounds = m && m.start === L.start
+          ? Math.min(m.n, L.rounds.length)
+          : L.rounds.filter((r) => r.won != null).length;   // işaretsiz: sayfa açılmadan bitenler gönderilmiş
+      }
       for (; sentRounds < L.rounds.length; sentRounds++) {
         const r = L.rounds[sentRounds];
         if (r.won == null && !final) break;
@@ -156,9 +177,40 @@
       }
     } catch (e) {}
   }
-  B.on('saved', () => { collectRounds(); softFlush(); });
-  B.on('runEnd', (d) => { collectRounds(true); B.event('runEnd', d); B.flush(); });
-  B.on('runAbandoned', (d) => B.event('runAbandoned', d));
+  /* denetim LG-11 — run sonu / bırakma NEREDE oldu: stage, raund, puan, hedef, mod, seed'li mi.
+     runEnd anında Game.state hâlâ o run; bırakmada eski run yalnız kayıtta (okeySave). */
+  const runWhere = (s) => {
+    if (!s) return {};
+    const o = { st: s.stage, r: s.roundInStage, sc: s.score, tgt: s.target, mode: s.runMode || 'base' };
+    if (s.seeded) o.seeded = true;
+    try { if (Game.isBossRound && Game.state === s && Game.isBossRound() && s.boss) o.boss = s.boss.key; } catch (e) {}
+    return o;
+  };
+  const savedRun = () => {
+    try { const sv = JSON.parse(localStorage.getItem('okeySave') || 'null'); return sv ? Object.assign(runWhere(JSON.parse(sv.data)), { where: sv.where }) : {}; }
+    catch (e) { return {}; }
+  };
+  /* denetim LG-11 — mağaza teklifleri: hangi jokerler GÖRÜLDÜ (alınanlar raund kaydının
+     add listesinde). Mağaza açılışında bir kez; yenileme (reroll) kayıt almadığı için görünmez. */
+  let lastStore = null;
+  const logStore = () => {
+    try {
+      const s = Game.state, st = s && s.store;
+      if (!st || st === lastStore) return;
+      lastStore = st;
+      B.event('store', { st: s.stage, r: s.roundInStage, coins: s.coins,
+        offer: (st.items || []).map((it) => it.key),
+        consum: st.consumable ? (st.consumable.key || null) : null,
+        tile: st.specialTile ? (st.specialTile.key || null) : null });
+    } catch (e) {}
+  };
+  B.on('saved', (d) => { if (d && d.where === 'inStore') logStore(); collectRounds(); softFlush(); });
+  B.on('runEnd', (d) => {
+    collectRounds(true);
+    B.event('runEnd', Object.assign({}, d, runWhere(typeof Game !== 'undefined' && Game.state)));
+    B.flush();
+  });
+  B.on('runAbandoned', (d) => B.event('runAbandoned', Object.assign({}, d, savedRun())));
   B.on('tutorialEnd', (d) => { B.event('tutorialEnd', d); softFlush(); });
   B.on('modesOpened', (d) => B.event('modesOpened', d));
   B.on('saveIncompatible', (d) => B.logError('save', 'Uyumsuz save: ' + d.message, d.stack));

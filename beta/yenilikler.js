@@ -17,6 +17,25 @@
   /* her madde: [etiket, TR başlık, TR açıklama, EN başlık, EN açıklama] */
   const NOTLAR = [
     {
+      id: '2026-10-22', date: { tr: '22 Ekim', en: 'October 22' },
+      items: [
+        ['yeni', 'Kaldığın yerden devam', 'Raund ortasında oyunu kapatıp açarsan aynı turdan devam edersin: elin, masan, puanın ve bahsin korunur.',
+          'Continue mid-round', 'Close the game mid-round and you pick up on the same turn: your hand, table, score and bet are kept.'],
+        ['degisti', 'Puanlama sahnesi', 'Onaydan önce yalnız grubun değeri yazar; jokerler, özel taşlar ve boss kesintisi (kırmızı) onaydan sonra tek tek eklenir.',
+          'Scoring scene', 'Before you confirm you only see the group value; jokers, special tiles and boss cuts (red) are added one by one after.'],
+        ['degisti', 'Avukat boss', 'Susturduğu joker artık gerçekten çalışmıyor; kartı griye döner ve "SUSTURULDU" yazar.',
+          'Lawyer boss', 'The silenced joker really does nothing now; its card turns grey and says "SILENCED".'],
+        ['degisti', 'Kumarhane hedefleri', "Stage 2–4'ün ilk raund hedefleri biraz yükseldi: yeni stage artık bir öncekinden kolay başlamıyor.",
+          'Casino targets', 'First-round targets of stages 2–4 went up a bit: a new stage no longer starts easier than the last one.'],
+        ['degisti', 'Sesler', 'Duraklatınca müzik kısılır, oyun sonunda raund müziği susar, Onayla tek ses çıkarır.',
+          'Sounds', 'Music ducks when paused, round music fades at game end, Confirm plays a single sound.'],
+        ['duzeldi', 'Joker hataları', "40'tan fazla joker hatası düzeldi: Füzyon ve Vasiyet içinde çalışmayanlar, backup'a gidip gelince yaşlanmayan jokerler, Derin Nefes, Ustanın Mührü, Gökyüzü Ejderhası ve daha fazlası.",
+          'Joker bugs', 'Over 40 joker bugs fixed: jokers that stopped working inside Fusion or Legacy, jokers that never aged when moved to backup and back, Deep Breath, Master\'s Seal, Sky Dragon and more.'],
+        ['duzeldi', 'Ekran ve metinler', 'Üç Kağıtçı artık haritada açılmıyor, Game Over iki kez gelmiyor, küçük ekranda taşan pencereler ve İngilizcede Türkçe kalan yazılar düzeldi.',
+          'Screens and texts', 'Three-Card Monte no longer opens on the map, Game Over no longer shows twice, overflowing windows on small screens and leftover Turkish in English are fixed.'],
+      ],
+    },
+    {
       id: '2026-10-16', date: { tr: '16 Ekim', en: 'October 16' },
       items: [
         ['yeni', 'Seed', "Her run'ın bir kodu var. Game Over ekranında kopyala, Yeni Run'da yaz: aynı run'ı yeniden oynarsın. (Seed girilen run istatistiğe sayılmaz.)",
