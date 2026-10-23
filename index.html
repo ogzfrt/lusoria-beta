@@ -8,10 +8,10 @@
      Oyun kendi temalarını çizer; renklerine dokunulmasın. -->
 <meta name="color-scheme" content="only light">
 <title>LUSORIA (Beta)</title>
-<link rel="stylesheet" href="style.css?v=8ee7323">
-<link rel="stylesheet" href="beta/beta.css?v=8ee7323">
-<script>window.LUSORIA_BETA = { version: "0.01", build: "8ee7323" };</script>
-<script src="beta/boot.js?v=8ee7323"></script>
+<link rel="stylesheet" href="style.css?v=9297bd3">
+<link rel="stylesheet" href="beta/beta.css?v=9297bd3">
+<script>window.LUSORIA_BETA = { version: "0.01", build: "9297bd3" };</script>
+<script src="beta/boot.js?v=9297bd3"></script>
 <script>
 /* RENK TEMASI — İLK BOYAMADAN ÖNCE UYGULANIR.
    Tema `html[data-theme]` ile sürülüyor. Bu satır ui.js'e bırakılsaydı
@@ -154,6 +154,8 @@
           <div class="st-sh-tab"><span id="mapConsumTitle">Değnek</span><span id="mapConsumCount" class="gm-sh-count">0/3</span></div>
           <div class="st-sh-body"><div id="mapConsumRow"></div></div>
         </div>
+        <!-- denetim3 #45 — deste jokerleri haritada da görünür ve sağ tıkla satılır (store'daki şeridin aynısı) -->
+        <div id="mapDeckRow"></div>
       </div>
       <div id="mapBackupShoulder" class="st-shoulder st-inv">
         <div class="st-sh-tab"><span id="mapBackupTitle">backup</span><span id="mapBackupCount" class="gm-sh-count">0/2</span></div>
@@ -365,6 +367,7 @@
            sayacı ve boş atılan slotu. -->
       <div id="pileCol">
         <div class="deck-pile"></div>
+        <div id="deckPeek" class="hidden"></div>
         <div id="deckCount" class="gm-deck-count"></div>
         <div id="discardSlot" class="discard-slot"></div>
       </div>
@@ -515,18 +518,18 @@
   </div>
 
 </div>
-<script src="engine.js?v=8ee7323"></script>
-<script src="i18n.js?v=8ee7323"></script>
-<script src="ui.js?v=8ee7323"></script>
+<script src="engine.js?v=9297bd3"></script>
+<script src="i18n.js?v=9297bd3"></script>
+<script src="ui.js?v=9297bd3"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="beta/metinler.js?v=8ee7323"></script>
-<script src="beta/firebase-config.js?v=8ee7323"></script>
-<script src="beta/backend.js?v=8ee7323"></script>
-<script src="beta/gunluk.js?v=8ee7323"></script>
-<script src="beta/hesap.js?v=8ee7323"></script>
-<script src="beta/arayuz.js?v=8ee7323"></script>
-<script src="beta/yenilikler.js?v=8ee7323"></script>
+<script src="beta/metinler.js?v=9297bd3"></script>
+<script src="beta/firebase-config.js?v=9297bd3"></script>
+<script src="beta/backend.js?v=9297bd3"></script>
+<script src="beta/gunluk.js?v=9297bd3"></script>
+<script src="beta/hesap.js?v=9297bd3"></script>
+<script src="beta/arayuz.js?v=9297bd3"></script>
+<script src="beta/yenilikler.js?v=9297bd3"></script>
 </body>
 </html>

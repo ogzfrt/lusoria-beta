@@ -17,6 +17,27 @@
   /* her madde: [etiket, TR başlık, TR açıklama, EN başlık, EN açıklama] */
   const NOTLAR = [
     {
+      id: '2026-10-23', date: { tr: '23 Ekim', en: 'October 23' },
+      items: [
+        ['degisti', 'Hileli Zar', 'Her tur zar atılır: açtığın o sayıdaki her taş +0.4x. Raundda bir kez HİLE ile zarı istediğin sayıya çevir; her hile zarı kalıcı güçlendirir.',
+          'Loaded Dice', 'A die is rolled each turn: each tile of that number you meld gives +0.4x. Once a round, CHEAT to set the die to any number; every cheat makes it stronger for good.'],
+        ['degisti', 'Kart Sayıcı', 'Destenin üstünde çekeceğin sıradaki 2 taşı görürsün.',
+          'Card Counter', 'You can see the next 2 tiles you will draw, right above the deck.'],
+        ['degisti', 'Terazi', 'Sadeleşti: her tur bir taş feda et, hedef o taşın 10 katı düşer.',
+          'Scales', 'Simpler: sacrifice one tile a turn and the target drops by 10 times its value.'],
+        ['degisti', 'Kumarhane hedefleri', 'İlk boss biraz kolaylaştı, sonraki stage’ler belirgin zorlaştı: oyun ilerledikçe kolaylaşmıyor.',
+          'Casino targets', 'The first boss got a bit easier and later stages clearly harder: the game no longer gets easier as you go.'],
+        ['yeni', 'Rare çizimleri', 'Rare jokerlerin çizimleri geldi. Bukalemun seçtiğin rengin çizimine döner, Damga her kullanımda daha çok damgalanır.',
+          'Rare art', 'Rare jokers have their art. Chameleon shows the colour you pick, Stamp looks more stamped with each use.'],
+        ['yeni', 'Bahis ödülünde değiş', 'Slotların doluyken bahis ödülü joker seçersen hangi jokerin yerine geçeceğini seçersin.',
+          'Swap on bet reward', 'If your slots are full when you pick a joker as a bet reward, you choose which joker it replaces.'],
+        ['degisti', 'Öğretici ve uyarılar', 'Öğreticideki Mühür artık anlattığı yerleri örtmüyor; kurala uymayan hamlede kısa bir uyarı çıkar.',
+          'Tutorial and warnings', 'The Seal in the tutorial no longer covers what it explains; a short warning shows when a move breaks a rule.'],
+        ['duzeldi', 'Hatalar', 'Boss jokeri satışı 0 coin vermiyor (artık 12), Üç Kağıtçı okeyi raund sonuna kadar kalıyor, Orion’un açılımı Zincir ve yan bahse sayılıyor, Hi-Lo’da eşitlik yok.',
+          'Bugs', "Boss jokers no longer sell for 0 coins (now 12), Three-Card Monte's okey stays until round end, Orion's melds count for Chain and side bets, no ties in Higher or Lower."],
+      ],
+    },
+    {
       id: '2026-10-22', date: { tr: '22 Ekim', en: 'October 22' },
       items: [
         ['yeni', 'Kaldığın yerden devam', 'Raund ortasında oyunu kapatıp açarsan aynı turdan devam edersin: elin, masan, puanın ve bahsin korunur.',
