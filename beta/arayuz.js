@@ -61,6 +61,21 @@
     document.body.appendChild(ov);
     setTimeout(() => ov.querySelector('#betaFbTa').focus(), 50);
   }
+  /* kullanıcı 2026-10-23: ana menüden de doğrudan geri bildirim (eskiden yalnız oyunda duraklat menüsünden) —
+     sağ üst köşe, menü düğmelerinin dilinde */
+  {
+    const stage = document.querySelector('#menuScreen .fm-stage');
+    if (stage) {
+      const mb = document.createElement('button');
+      mb.id = 'betaFbMenu';
+      mb.className = 'fm-btn beta-fb-menu';
+      mb.textContent = B.t('fbTitle');
+      mb.addEventListener('click', (e) => { e.stopPropagation(); showFeedback(); });
+      stage.appendChild(mb);
+      new MutationObserver(() => { const s = B.t('fbTitle'); if (mb.textContent !== s) mb.textContent = s; })
+        .observe(document.getElementById('menuScreen'), { attributes: true, attributeFilter: ['class'] });
+    }
+  }
   /* P109 (kullanıcı: "beta sürümde store ekranında feedback veremiyorlar") — store'un kendi duraklat menüsü */
   for (const popId of ['menuPop', 'mapMenuPop', 'storeMenuPop']) {
     const pop = document.getElementById(popId);

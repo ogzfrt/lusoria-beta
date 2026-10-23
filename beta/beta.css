@@ -81,3 +81,6 @@ html.beta-pretut #btnQuit     { top: 607px; }
   .bn-h { font-size: 15px; } .bn-d { font-size: 13px; }
   .bn-box .pk-foot .ep-btn { min-width: 0; width: 100%; }
 }
+
+/* ana menü: sağ üst köşede Geri Bildirim (kullanıcı 2026-10-23) — öğretici bitmeden de görünür */
+#betaFbMenu.fm-btn { left: auto; right: 60px; top: 56px; width: 368px; height: 76px; padding: 0 10px; font-size: 26px; }

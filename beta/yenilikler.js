@@ -17,6 +17,13 @@
   /* her madde: [etiket, TR başlık, TR açıklama, EN başlık, EN açıklama] */
   const NOTLAR = [
     {
+      id: '2026-10-23b', date: { tr: '23 Ekim', en: 'October 23' },
+      items: [
+        ['yeni', 'Ana menüden geri bildirim', 'Ana menünün sağ üstündeki Geri Bildirim düğmesiyle oyuna girmeden de yorum yazabilirsin.',
+          'Feedback from the main menu', 'Use the Feedback button at the top right of the main menu to send a comment without starting a game.'],
+      ],
+    },
+    {
       id: '2026-10-23', date: { tr: '23 Ekim', en: 'October 23' },
       items: [
         ['degisti', 'Hileli Zar', 'Her tur zar atılır: açtığın o sayıdaki her taş +0.4x. Raundda bir kez HİLE ile zarı istediğin sayıya çevir; her hile zarı kalıcı güçlendirir.',
