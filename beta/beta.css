@@ -29,7 +29,7 @@ html.beta-pretut #btnQuit     { top: 607px; }
 .col-cat[data-cat="modes"], .col-cat[data-cat="music"] { display: none !important; }
 
 /* Sürüm etiketi (ana menü sağ alt) */
-#betaVer { position: absolute; right: 28px; bottom: 22px; font-family: var(--gm-font); font-size: 22px; opacity: .55; color: var(--gm-light); pointer-events: none; z-index: 5; }
+#betaVer { position: absolute; left: calc(28px * var(--fm-scale)); bottom: calc(22px * var(--fm-scale));   /* kullanıcı 2026-10-23: sol alt; menüyle aynı ölçekte (telefonda Çıkış'a binmesin) */ font-family: var(--gm-font); font-size: calc(22px * var(--fm-scale)); opacity: .55; color: var(--gm-light); pointer-events: none; z-index: 5; }
 
 /* Beta pencereleri (pk-ov kalıbı üstüne yalnız form öğeleri) */
 .beta-ov { z-index: 3000; }
@@ -55,32 +55,3 @@ html.beta-pretut #btnQuit     { top: 607px; }
   .beta-notice { font-size: 13px; }
 }
 
-/* Yenilikler penceresi (2026-10-16): koyu panel + plaka başlık + etiketli bölümler + açık kartlar */
-.bn-box { width: min(820px, 94vw); max-width: 820px; text-align: left; }
-.bn-box > .pk-title { left: 50%; transform: translateX(-50%); }
-.bn-box > .pk-sub-title { text-align: center; font-size: 16px !important; margin: 0 0 14px; }
-.bn-body { max-height: min(560px, 62vh); overflow-y: auto; padding: 14px; border-radius: 8px;
-  background: rgba(0, 0, 0, .28); box-shadow: inset 0 3px 0 rgba(0, 0, 0, .35); }
-.bn-date { font: 700 18px/1 var(--gm-font); color: var(--gm-turn-on); margin: 6px 0 10px; }
-.bn-sec { margin-bottom: 14px; }
-.bn-sec:last-child { margin-bottom: 0; }
-.bn-tag { display: inline-block; margin-bottom: 8px; padding: 9px 12px 5px; border-radius: 6px; color: #fff;
-  font: 700 15px/1 var(--gm-font); letter-spacing: 1px; box-shadow: 0 3px 0 rgba(0, 0, 0, .4); }
-.bn-yeni .bn-tag { background: #2FAE6B; }
-.bn-degisti .bn-tag { background: #E08A1E; }
-.bn-duzeldi .bn-tag { background: #3D86D6; }
-.bn-item { background: var(--gm-light); color: var(--gm-dark); border-radius: 8px; border-left: 7px solid;
-  padding: 9px 12px; margin-bottom: 8px; box-shadow: 0 3px 0 rgba(0, 0, 0, .35); }
-.bn-yeni .bn-item { border-left-color: #2FAE6B; }
-.bn-degisti .bn-item { border-left-color: #E08A1E; }
-.bn-duzeldi .bn-item { border-left-color: #3D86D6; }
-.bn-h { display: block; font: 700 17px/1.15 var(--gm-font); margin-bottom: 3px; }
-.bn-d { display: block; font: 15px/1.4 system-ui, 'Segoe UI', sans-serif; }
-.bn-box .pk-foot .ep-btn { min-width: 320px; min-height: 58px; }
-@media (max-width: 600px) {
-  .bn-h { font-size: 15px; } .bn-d { font-size: 13px; }
-  .bn-box .pk-foot .ep-btn { min-width: 0; width: 100%; }
-}
-
-/* ana menü: sağ üst köşede Geri Bildirim (kullanıcı 2026-10-23) — öğretici bitmeden de görünür */
-#betaFbMenu.fm-btn { left: auto; right: 60px; top: 56px; width: 368px; height: 76px; padding: 0 10px; font-size: 26px; }
