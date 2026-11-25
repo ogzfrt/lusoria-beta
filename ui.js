@@ -12218,16 +12218,40 @@
     el.colBody.innerHTML = '';
     el.colBody.className = 'col-v-' + (colView === 'all' ? 'all' : colView === 'hub' ? 'hub' : 'cat');
     if (colView === 'all') { renderCollectionAll(); colOpen(); return; }
+    /* P141 (kullanıcı 2026-11-25: "emojileri kaldıralım, baştan düzenleyelim") — giriş: emoji yok;
+       üstte toplam keşif çubuğu, solda büyük Jokerler plakası (keşfedilen jokerlerin kendi çizimleri
+       yelpaze), sağda kategori plakaları: ad + sayı + keşif çubuğu. */
+    const colStat = (c) => {
+      const it = c.items();
+      return c.disc ? { k: it.filter((d) => Disc.known(d._disc || c.disc, d)).length, n: it.length } : { k: null, n: it.length };
+    };
+    const colBar = (k, n) => `<span class="cc-bar"><i style="width:${n ? Math.round((k / n) * 100) : 0}%"></i></span>`;
     if (colView === 'hub') {
       $('colSub').textContent = t('colHubSub');
+      let K = 0, N = 0;
+      for (const c of COL_CATS) if (c.disc) { const st = colStat(c); K += st.k; N += st.n; }
+      const tot = document.createElement('div');
+      tot.className = 'col-total';
+      tot.innerHTML = `<span class="ct-label">${t('colTotal')}</span>${colBar(K, N)}<span class="ct-num">${K}/${N}</span>`;
+      el.colBody.appendChild(tot);
       const hub = document.createElement('div');
       hub.className = 'col-hub';
+      const RANK = { mythic: 0, legendary: 1, rare: 2, common: 3 };
+      const fan = Object.values(JOKER_DEFS)
+        .filter((d) => RANK[d.rarity] !== undefined && JOKER_ART.has(d.key) && Disc.known('joker', d))
+        .sort((a, b) => RANK[a.rarity] - RANK[b.rarity]).slice(0, 3);
       for (const c of COL_CATS) {
+        const st = colStat(c);
         const b = document.createElement('button');
         b.className = 'col-cat' + (c.big ? ' big' : '');
         b.dataset.cat = c.key;
-        b.innerHTML = `<span class="cc-ico">${c.ico}</span><span class="cc-name">${t('colCat_' + c.key)}</span>`
-          + `<span class="cc-count">${c.disc ? `${c.items().filter((d) => Disc.known(d._disc || c.disc, d)).length}/${c.items().length}` : c.items().length}</span>`;
+        /* yelpaze hep 3 kart: keşfedilmemiş yerlerde "bulunamadı" kart arkası (yeni oyuncu 3 soru işareti görür) */
+        const fan3 = [...fan.map((d) => `<span class="col-jk-art jk-${d.key}"></span>`),
+          ...Array(3 - fan.length).fill('<span class="col-nf-art"></span>')];
+        if (fan3.length === 3) fan3.splice(1, 0, fan3.shift());   // en değerli ortada
+        b.innerHTML = (c.big ? `<span class="cc-fan">${fan3.join('')}</span>` : '')
+          + `<span class="cc-name">${t('colCat_' + c.key)}</span>`
+          + (st.k === null ? `<span class="cc-count">${st.n}</span>` : `<span class="cc-count">${st.k}/${st.n}</span>${colBar(st.k, st.n)}`);
         b.addEventListener('click', () => { colPage = 0; colFilter = 'all'; showCollection('cat:' + c.key); });
         hub.appendChild(b);
       }
@@ -12239,7 +12263,9 @@
     $('colSub').textContent = t('colCatSub_' + cat.key);
     const bar = document.createElement('div');
     bar.className = 'col-bar';
-    bar.innerHTML = `<div class="col-plate">${cat.ico} ${t('colCat_' + cat.key)}</div>`;
+    const cst = colStat(cat);
+    /* P141 — başlıkta emoji yok: kategori adı + sağda keşif sayacı */
+    bar.innerHTML = `<div class="col-plate">${t('colCat_' + cat.key)}</div><div class="col-count">${cst.k === null ? cst.n : `${cst.k}/${cst.n}`}</div>`;
     /* P101 — keşifli bölümde çip yalnız o filtreden EN AZ BİR keşfedilmiş kart
        varsa görünür (hiç keşif yokken kaç Mythic olduğu belli olmasın);
        tek çip bile açılınca başına "Hepsi" gelir. */
@@ -12262,7 +12288,7 @@
         b.addEventListener('click', () => { colFilter = f; colPage = 0; showCollection(colView); });
         chips.appendChild(b);
       }
-      bar.appendChild(chips);
+      bar.querySelector('.col-plate').after(chips);
     }
     el.colBody.appendChild(bar);
     if (!cat.card) {   // oyun modları: durum satırları
@@ -12291,9 +12317,12 @@
     if (cat.key === 'music') colMusicSync();
     const pager = document.createElement('div');
     pager.className = 'col-pager';
+    /* P141 — sayfa noktaları (her sayfa bir nokta, tıklanır); metin ekran okuyucu için title'da */
     pager.innerHTML = `<button class="rp-arrow col-prev" ${pages < 2 ? 'disabled' : ''}>‹</button>`
-      + `<div class="col-pages">${t('colPage', colPage + 1, pages)}</div>`
+      + `<div class="col-pips" title="${t('colPage', colPage + 1, pages)}">`
+      + Array.from({ length: pages }, (_, i) => `<button class="col-pip${i === colPage ? ' on' : ''}" data-p="${i}"></button>`).join('') + `</div>`
       + `<button class="rp-arrow col-next" ${pages < 2 ? 'disabled' : ''}>›</button>`;
+    pager.querySelectorAll('.col-pip').forEach((p) => p.addEventListener('click', () => { colPage = +p.dataset.p; showCollection(colView); }));
     pager.querySelector('.col-prev').addEventListener('click', () => { colPage = (colPage - 1 + pages) % pages; showCollection(colView); });
     pager.querySelector('.col-next').addEventListener('click', () => { colPage = (colPage + 1) % pages; showCollection(colView); });
     el.colBody.appendChild(pager);

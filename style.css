@@ -12890,3 +12890,40 @@ html[data-theme="boss"][data-boss-ui="corporates"] #gameScreen #corpScreen:not([
 @keyframes csShake { 0%, 74% { transform: none; } 77% { transform: translateX(-7px); } 80% { transform: translateX(6px); }
   83% { transform: translateX(-3px) skewX(-2deg); } 86%, 100% { transform: none; } }
 @media (prefers-reduced-motion: reduce) { #corpScreen.morph .cs-logo, #corpScreen.morph .cs-noise, #corpScreen.morph { animation: none; } #corpScreen.morph .cs-logo { clip-path: none; } }
+
+/* ============================================================
+   P141 — KOLEKSİYON YENİ DÜZEN (kullanıcı 2026-11-25: emoji yok, baştan)
+   Giriş: toplam keşif çubuğu + büyük Jokerler plakası (yelpaze çizimler) + kategori plakaları.
+   Kategori: emojisiz başlık + filtre sekmeleri + keşif sayacı, sayfa noktaları.
+   ============================================================ */
+.col-total { display: flex; align-items: center; gap: 12px; margin: 2px 2px 14px; }
+.col-total .ct-label { font: 700 14px/1 var(--gm-font); color: var(--gm-light); white-space: nowrap; }
+.col-total .ct-num { font: 700 14px/1 var(--gm-font); color: var(--gm-dark); background: var(--gm-light); border-radius: 6px; padding: 6px 10px; box-shadow: 0 3px 0 rgba(0, 0, 0, .4); }
+.col-total .cc-bar { flex: 1; height: 16px; border-color: var(--gm-light); background: rgba(0, 0, 0, .3); }
+.col-total .cc-bar i { background: var(--gm-light); }
+.cc-bar { display: block; position: relative; width: 78%; height: 12px; border: 3px solid var(--gm-dark); border-radius: 4px; background: rgba(0, 0, 0, .12); overflow: hidden; }
+.cc-bar i { position: absolute; inset: 0 auto 0 0; background: var(--gm-dark);
+  background-image: repeating-linear-gradient(90deg, transparent 0 10px, rgba(255, 255, 255, .18) 10px 12px); }
+.col-hub { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows: minmax(112px, auto); }
+.col-hub .col-cat { min-width: 0; text-align: center; }
+.col-hub .col-cat { gap: 10px; }
+.col-hub .col-cat.big { grid-row: span 3; gap: 14px; }
+.col-cat .cc-name { font-size: 20px; }
+.col-cat.big .cc-name { font-size: 30px; }
+.col-cat .cc-count { font-size: 14px; }
+.col-cat.big .cc-bar { width: 70%; height: 16px; }
+.cc-fan { position: relative; display: block; width: 210px; height: 128px; margin: 4px 0 10px; }
+.cc-fan > span { position: absolute; left: 64px; top: 4px; width: 82px; height: 112px; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .35)); }
+.cc-fan > span:nth-child(1) { transform: rotate(-13deg) translate(-50px, 10px); }
+.cc-fan > span:nth-child(3) { transform: rotate(13deg) translate(50px, 10px); }
+.cc-fan > span:nth-child(2) { z-index: 1; }
+.col-count { font: 700 15px/1 var(--gm-font); color: var(--gm-dark); background: var(--gm-light); border-radius: 6px; padding: 7px 12px; box-shadow: 0 3px 0 rgba(0, 0, 0, .4); margin-left: auto; }
+.col-bar .col-chips { margin-left: 8px; }
+.col-pips { display: flex; gap: 8px; align-items: center; padding: 10px 14px; background: rgba(0, 0, 0, .28); border-radius: 8px; }
+.col-pip { width: 14px; height: 14px; padding: 0; border: 0; border-radius: 3px; background: color-mix(in srgb, var(--gm-light) 35%, transparent); cursor: pointer; }
+.col-pip.on { background: var(--gm-light); box-shadow: 0 0 0 3px rgba(0, 0, 0, .35); }
+@media (max-width: 900px) {
+  .col-hub { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .col-hub .col-cat.big { grid-column: span 2; grid-row: auto; }
+  .col-cat .cc-name { font-size: 17px; }
+}

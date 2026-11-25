@@ -15,6 +15,13 @@
   /* her madde: [etiket, TR başlık, TR açıklama, EN başlık, EN açıklama, ('proto' → betada gizli)] */
   const TUM_NOTLAR = [
     {
+      id: '2026-11-25b', date: { tr: '25 Kasım', en: 'November 25' },
+      items: [
+        ['degisti', 'Koleksiyon yenilendi', 'Toplam keşif çubuğu, kategorilerde keşif çubukları ve keşfettiğin jokerlerden bir yelpaze; sayfalar artık noktalarla. Değnekler bölümünün adı Tılsımlar oldu, Değnek / Totem sekmeleriyle.',
+          'Collection refreshed', 'A total discovery bar, discovery bars on each category and a fan of the jokers you found; pages now use dots. The Wands section is now Charms, with Wand / Totem tabs.'],
+      ],
+    },
+    {
       id: '2026-11-25', date: { tr: '25 Kasım', en: 'November 25' },
       items: [
         ['yeni', '10 yeni boss çizimi', 'Freedom Fighters, Kara Kedi, Ahtapot, Zombie, Glitch, Kahin, Terzi’nin İğnesi, Tüccar, Avukat ve Fatality raundlarında artık boss’un kendisi var; her birinin sahnesi de ona göre yeniden çizildi.',

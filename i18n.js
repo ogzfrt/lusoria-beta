@@ -112,7 +112,7 @@
       quitToast: 'Tarayıcı bu sekmeyi kapatmama izin vermedi — sekmeyi elle kapatabilirsin.',
       menuNote: (n) => `Prototip · GDD v3 · ${n} Stage'lik Run`,
       /* koleksiyon */
-      colTitle: '🀄 KOLEKSİYON',
+      colTitle: 'KOLEKSİYON', colTotal: 'Toplam keşif',
       colSub: (n) => `Tüm jokerler (${n}), değnekler, özel taşlar ve stage sonu güçlendirmeleri. Üzerine gelerek incele.`,
       colConsumHead: '🎴 Değnekler',
       colHubSub: 'Bir kategori seç — kartların üzerine gelerek incele.',
@@ -1327,7 +1327,7 @@
       quitBtn: 'Quit',
       quitToast: 'The browser refused to close this tab — please close it manually.',
       menuNote: (n) => `Prototype · GDD v3 · ${n}-Stage Run`,
-      colTitle: '🀄 COLLECTION',
+      colTitle: 'COLLECTION', colTotal: 'Discovered',
       colSub: (n) => `All jokers (${n}), consumables, special tiles and stage-end upgrades. Hover to inspect.`,
       colConsumHead: '🎴 Wands',
       colHubSub: 'Pick a category — hover the cards to inspect.',
