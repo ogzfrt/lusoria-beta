@@ -9792,6 +9792,8 @@ html[data-theme="boss"][data-boss-ui="karaKedi"] {
   --img-tray-4: url('assets/game/boss/kara-kedi/tray-4.svg');
   --img-tile-back: url('assets/game/boss/kara-kedi/tile-back.png');
   --img-rack-glow: url('assets/game/boss/kara-kedi/rack-glow.png');
+  --boss-char: url('assets/game/boss/kara-kedi/character.png');
+  --boss-char-x: 655px; --boss-char-y: 13px; --boss-char-w: 651px; --boss-char-h: 745px;
   --st-edge: #1A1A1A; --st-edge-soft: rgba(26, 26, 26, .38); --st-bg: #E8E2C8;
   --st-head: #1A1A1A; --st-rule: rgba(26, 26, 26, .35); --st-glow: rgba(244, 238, 138, .25);
 }
@@ -9980,6 +9982,8 @@ html[data-theme="boss"][data-boss-ui="ahtapot"] {
   --img-tray-4: url('assets/game/boss/ahtapot/tray-4.svg');
   --img-tile-back: url('assets/game/boss/ahtapot/tile-back.png');
   --img-rack-glow: url('assets/game/boss/ahtapot/rack-glow.png');
+  --boss-char: url('assets/game/boss/ahtapot/character.png');
+  --boss-char-x: 579px; --boss-char-y: 106px; --boss-char-w: 761px; --boss-char-h: 730px;
   --st-edge: #22303A; --st-edge-soft: rgba(34, 48, 58, .38); --st-bg: #DCE4EA;
   --st-head: #22303A; --st-rule: rgba(34, 48, 58, .35); --st-glow: rgba(154, 220, 240, .25);
 }
@@ -10016,6 +10020,8 @@ html[data-theme="boss"][data-boss-ui="fatality"] {
   --img-tray-4: url('assets/game/boss/fatality/tray-4.svg');
   --img-tile-back: url('assets/game/boss/fatality/tile-back.png');
   --img-rack-glow: url('assets/game/boss/fatality/rack-glow.png');
+  --boss-char: url('assets/game/boss/fatality/character.png');
+  --boss-char-x: 793px; --boss-char-y: 78px; --boss-char-w: 367px; --boss-char-h: 700px;
   --st-edge: #5E0C0E; --st-edge-soft: rgba(94, 12, 14, .38); --st-bg: #F2DACC;
   --st-head: #5E0C0E; --st-rule: rgba(94, 12, 14, .35); --st-glow: rgba(255, 122, 74, .25);
 }
@@ -10052,13 +10058,15 @@ html[data-theme="boss"][data-boss-ui="zombie"] {
   --img-tray-4: url('assets/game/boss/zombie/tray-4.svg');
   --img-tile-back: url('assets/game/boss/zombie/tile-back.png');
   --img-rack-glow: url('assets/game/boss/zombie/rack-glow.png');
+  --boss-char: url('assets/game/boss/zombie/character.png');
+  --boss-char-x: 670px; --boss-char-y: 52px; --boss-char-w: 563px; --boss-char-h: 714px;
   --st-edge: #24424A; --st-edge-soft: rgba(36, 66, 74, .38); --st-bg: #DCECEE;
   --st-head: #24424A; --st-rule: rgba(36, 66, 74, .35); --st-glow: rgba(154, 240, 200, .25);
 }
 html[data-theme="boss"][data-boss-ui="freedom"] {
-  --gm-turn-on: #FFF6DC; --boss-pip: #B0174E; --boss-pip-off: rgba(255, 246, 220, .85); --boss-ink: #B0174E;
-  --gm-dark: #B0174E; --gm-light: #FFF6DC; --gm-panel: #F2CD38; --gm-bg: #B0174E;
-  --gm-coin-ink: #B0174E; --boss-glow: #B0174E; --boss-glow-soft: rgba(176, 23, 78, .45);
+  --gm-turn-on: #FFF4DC; --boss-pip: #F6C445; --boss-pip-off: rgba(255, 244, 220, .55); --boss-ink: #FFF4DC;
+  --gm-dark: #A8141C; --gm-light: #FFF4DC; --gm-panel: #F2B13A; --gm-bg: #A8141C;
+  --gm-coin-ink: #A8141C; --boss-glow: #F6C445; --boss-glow-soft: rgba(246, 196, 69, .45);
   --boss-bg: url('assets/game/boss/freedom/bg.png');
   --img-action-bar: url('assets/game/boss/freedom/action-bar.svg');
   --img-btn-info: url('assets/game/boss/freedom/btn-info.svg');
@@ -10089,8 +10097,10 @@ html[data-theme="boss"][data-boss-ui="freedom"] {
   --img-tray-4: url('assets/game/boss/freedom/tray-4.svg');
   --img-tile-back: url('assets/game/boss/freedom/tile-back.png');
   --img-rack-glow: url('assets/game/boss/freedom/rack-glow.png');
-  --st-edge: #B0174E; --st-edge-soft: rgba(176, 23, 78, .38); --st-bg: #FFF6DC;
-  --st-head: #B0174E; --st-rule: rgba(176, 23, 78, .35); --st-glow: rgba(176, 23, 78, .25);
+  --boss-char: url('assets/game/boss/freedom/character.png');
+  --boss-char-x: 669px; --boss-char-y: 47px; --boss-char-w: 520px; --boss-char-h: 718px;
+  --st-edge: #A8141C; --st-edge-soft: rgba(168, 20, 28, .38); --st-bg: #FFF4DC;
+  --st-head: #A8141C; --st-rule: rgba(168, 20, 28, .35); --st-glow: rgba(246, 196, 69, .25);
 }
 html[data-theme="boss"][data-boss-ui="uzayli"] {
   --gm-dark: #3A1A22; --gm-light: #F2D6CE; --gm-panel: #C04A4A; --gm-bg: #3A1A22;
@@ -10201,6 +10211,8 @@ html[data-theme="boss"][data-boss-ui="dervish"] {
   --img-tray-4: url('assets/game/boss/glitch/tray-4.svg');
   --img-tile-back: url('assets/game/boss/glitch/tile-back.png');
   --img-rack-glow: url('assets/game/boss/glitch/rack-glow.png');
+  --boss-char: url('assets/game/boss/glitch/character.png');
+  --boss-char-x: 0px; --boss-char-y: 0px; --boss-char-w: 1920px; --boss-char-h: 1080px;
   --st-edge: #0A0A12; --st-edge-soft: rgba(10, 10, 18, .38); --st-bg: #DFFFE6;
   --st-head: #0A0A12; --st-rule: rgba(10, 10, 18, .35); --st-glow: rgba(57, 216, 106, .25);
 }
@@ -10237,6 +10249,8 @@ html[data-theme="boss"][data-boss-ui="terziIgne"] {
   --img-tray-4: url('assets/game/boss/terzi-ignesi/tray-4.svg');
   --img-tile-back: url('assets/game/boss/terzi-ignesi/tile-back.png');
   --img-rack-glow: url('assets/game/boss/terzi-ignesi/rack-glow.png');
+  --boss-char: url('assets/game/boss/terzi-ignesi/character.png');
+  --boss-char-x: 660px; --boss-char-y: 50px; --boss-char-w: 590px; --boss-char-h: 721px;
   --st-edge: #26324A; --st-edge-soft: rgba(38, 50, 74, .38); --st-bg: #EEE4F6;
   --st-head: #26324A; --st-rule: rgba(38, 50, 74, .35); --st-glow: rgba(208, 168, 255, .25);
 }
@@ -10273,6 +10287,8 @@ html[data-theme="boss"][data-boss-ui="avukat"] {
   --img-tray-4: url('assets/game/boss/avukat/tray-4.svg');
   --img-tile-back: url('assets/game/boss/avukat/tile-back.png');
   --img-rack-glow: url('assets/game/boss/avukat/rack-glow.png');
+  --boss-char: url('assets/game/boss/avukat/character.png');
+  --boss-char-x: 519px; --boss-char-y: 82px; --boss-char-w: 823px; --boss-char-h: 689px;
   --st-edge: #1E2A3A; --st-edge-soft: rgba(30, 42, 58, .38); --st-bg: #FBF6E4;
   --st-head: #1E2A3A; --st-rule: rgba(30, 42, 58, .35); --st-glow: rgba(232, 216, 144, .25);
 }
@@ -10347,6 +10363,8 @@ html[data-theme="boss"][data-boss-ui="kahin"] {
   --img-tray-4: url('assets/game/boss/kahin/tray-4.svg');
   --img-tile-back: url('assets/game/boss/kahin/tile-back.png');
   --img-rack-glow: url('assets/game/boss/kahin/rack-glow.png');
+  --boss-char: url('assets/game/boss/kahin/character.png');
+  --boss-char-x: 750px; --boss-char-y: 46px; --boss-char-w: 447px; --boss-char-h: 713px;
   --st-edge: #3A2214; --st-edge-soft: rgba(58, 34, 20, .38); --st-bg: #F2E2C6;
   --st-head: #3A2214; --st-rule: rgba(58, 34, 20, .35); --st-glow: rgba(122, 224, 216, .25);
 }
@@ -10383,6 +10401,8 @@ html[data-theme="boss"][data-boss-ui="tuccar"] {
   --img-tray-4: url('assets/game/boss/tuccar/tray-4.svg');
   --img-tile-back: url('assets/game/boss/tuccar/tile-back.png');
   --img-rack-glow: url('assets/game/boss/tuccar/rack-glow.png');
+  --boss-char: url('assets/game/boss/tuccar/character.png');
+  --boss-char-x: 592px; --boss-char-y: 65px; --boss-char-w: 771px; --boss-char-h: 702px;
   --st-edge: #3A2A18; --st-edge-soft: rgba(58, 42, 24, .38); --st-bg: #F4E6CC;
   --st-head: #3A2A18; --st-rule: rgba(58, 42, 24, .35); --st-glow: rgba(255, 208, 128, .25);
 }

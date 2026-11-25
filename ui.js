@@ -6728,13 +6728,9 @@
       renderInfoBadges(s.status === 'playing' ? items : []);
       renderChessClock();
     }
-    if (s.tuccarOffer && meldPhase) {
-      const b = document.createElement('button');
-      b.className = 'gm-btn';
-      b.innerHTML = t('tuccarBtn', '$');
-      b.addEventListener('click', () => showTuccarOffer());
-      el.openAreaHint.appendChild(b);
-    }
+    /* P139 (kullanıcı 2026-11-25: "teklifler otomatik çıkıyor, ortada buton durmaması lazım") —
+       "Tüccar teklifini gör" düğmesi kalktı: teklif pop-up'ı her tur kendiliğinden açılır ve
+       kapatma düğmesi yok (yalnız kabul / reddet), yani geri çağırmaya gerek kalmadı. */
     /* PLAYTEST 17 · GRUP F/23 — BEKLEYEN FÜZYON.
        Füzyon artık ne ana slotu ne backup'ı işgal eder; alındığı anda
        birleştirme ekranı açılır. Oyuncu "Sonra" derse ya da o an
@@ -8064,8 +8060,7 @@
          yalnız RAUND başında açılıyordu; turlar arasında oyuncunun barda
          beliren "$" düğmesine basması gerekiyordu — teklifin varlığı bile
          gözden kaçıyordu. Artık yeni tur başlar başlamaz kendiliğinden
-         açılır. Düğme yerinde duruyor: pop-up kapatılırsa oyuncu teklife
-         aynı turda geri dönebilsin. */
+         açılır. (P139: geri çağırma düğmesi kaldırıldı.) */
       /* (Tüccar artık yukarıda tuccarNext ile, pencereler kapandıktan sonra açılır) */
     }, 340);
   });
@@ -12185,7 +12180,11 @@
       card: (d) => (d.rarity === 'final' && !Disc.known('joker', d) ? colFinalCard(d) : colJokerCard(d)) },
     /* 2026-11-16 (kullanıcı) — lanetli değnekler Değnekler'de kendi nadirliklerinde; Lanetli Boyut totemleri
        değneklerin ardından (keşifleri ayrı 'totem' kaydında: _disc) */
-    { key: 'consum', ico: '🪄', disc: 'consum',
+    /* P140 (kullanıcı 2026-11-25) — jokerlerdeki nadirlik sekmeleri gibi Değnek / Totem sekmeleri;
+       bölümün adı ikisini de kapsayan kısa bir ad: "Tılsımlar" */
+    { key: 'consum', ico: '🪄', disc: 'consum', filters: ['all', 'consum', 'totem'],
+      filterLabel: (f) => t('colF_cursed_' + f),
+      filterFn: (d, f) => (d._kind === 'totem' ? 'totem' : 'consum') === f,
       items: () => [...byRarity(Object.values(CONSUMABLES)), ...byRarity(Object.values(TOTEM_DEFS)).map(d => ({ ...d, _kind: 'totem', _disc: 'totem' }))],
       card: (d) => (d._kind === 'totem' ? colCursedTile(d) : d.cursed ? colCursedTile({ ...d, _kind: 'consum' }) : colConsumCard(d)) },
     { key: 'special', ico: '💠', disc: 'special', items: () => Object.values(SPECIAL_TILES), card: (d) => colSpecialCard(d) },

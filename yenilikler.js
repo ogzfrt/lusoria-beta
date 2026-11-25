@@ -15,6 +15,15 @@
   /* her madde: [etiket, TR başlık, TR açıklama, EN başlık, EN açıklama, ('proto' → betada gizli)] */
   const TUM_NOTLAR = [
     {
+      id: '2026-11-25', date: { tr: '25 Kasım', en: 'November 25' },
+      items: [
+        ['yeni', '10 yeni boss çizimi', 'Freedom Fighters, Kara Kedi, Ahtapot, Zombie, Glitch, Kahin, Terzi’nin İğnesi, Tüccar, Avukat ve Fatality raundlarında artık boss’un kendisi var; her birinin sahnesi de ona göre yeniden çizildi.',
+          '10 new boss portraits', 'Freedom Fighters, Black Cat, Octopus, Zombie, Glitch, Oracle, Tailor’s Needle, Merchant, Lawyer and Fatality now appear in their rounds, each with a redrawn scene to match.'],
+        ['duzeldi', 'Tüccar teklifi', 'Tüccar’ın teklifi her tur kendiliğinden açıldığı için ortadaki “teklifini gör” düğmesi kaldırıldı.',
+          'Merchant offer', 'The Merchant’s offer opens by itself every turn, so the “view offer” button in the middle was removed.'],
+      ],
+    },
+    {
       id: '2026-11-17', date: { tr: '17 Kasım', en: 'November 17' },
       items: [
         ['yeni', 'Lanetli Çocuk ödülü', 'Lanetli Boyut finalini kazanınca ana menüde Mühür’ün yanında Lanetli Çocuk’un oyuncak ayısı belirir.',
