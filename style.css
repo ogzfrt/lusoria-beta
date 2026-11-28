@@ -29,7 +29,7 @@ body {
     radial-gradient(ellipse 900px 480px at 50% 8%, rgba(90, 110, 200, .14), transparent 65%),
     radial-gradient(ellipse at 50% 120%, #20203c 0%, var(--bg) 55%);
   color: #EDEDF2;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: var(--gm-font);
   overflow-x: hidden;
 }
 
@@ -289,24 +289,6 @@ body::before {
 }
 @keyframes blinkDanger { 50% { opacity: .4; } }
 .joker-tile .jt-uses.frozen { background: #1d3a5f; border-color: #4A90D9; color: #bfe0ff; }
-/* (P45: backup kartındaki "Ana Slota Al" düğmesi kaldırıldı — backup jokeri
-   kartın üstüne gelip sol tıkla ana slota geçer.) */
-
-/* (P43: kartın köşesindeki DAMGALA / İPOTEK hap düğmeleri kaldırıldı —
-   elle kullanılan jokerler kartın üstüne gelip sol tıkla kullanılır.) */
-/* (P54 · Grup B: Crimson King'in taç rozeti kaldırıldı — taç efekti oyundan çıktı.) */
-/* PLAYTEST 31 · GRUP I / C — Yasak Elma ve Pinky Warrior okeyleri */
-.tile.apple-tile::after,
-.tile.pinky-okey::after {
-  position: absolute;
-  top: -7px;
-  right: -5px;
-  font-size: 13px;
-  line-height: 1;
-  pointer-events: none;
-}
-.tile.apple-tile::after { content: '🍎'; }
-.tile.pinky-okey::after { content: '🩷'; }
 /* PLAYTEST 31 · GRUP E — Tanrının Eli seçim penceresi (#pilePopup kabuğu) */
 #godPickPop .gp-opt { cursor: pointer; }
 #godPickPop .gp-sel { outline: 3px solid var(--gold, #E8B530); outline-offset: 1px; transform: translateY(-4px); }
@@ -1321,7 +1303,9 @@ body::before {
 }
 @keyframes obPop { from { transform: scale(.7); opacity: 0; } }
 /* Playtest 18: yuvarlak çerçeve → taş (bkz. .mascot-badge açıklaması) */
-#okeyBanner img { height: 116px; width: auto; border-radius: 0; background: none;
+/* P142 — maskot eşyaları (Lady Luck kalpleri, Orion şapkası, Lanetli Çocuk ayısı) bu kuralın DIŞINDA: 116 px'e
+   zorlanınca boyları ve yerleri bozuluyor, maskotun soluna kayıyorlardı */
+#okeyBanner img:not(.ep-msc-item) { height: 116px; width: auto; border-radius: 0; background: none;
   border: 0; image-rendering: pixelated; filter: drop-shadow(0 4px 8px rgba(0,0,0,.3)); }
 #okeyBanner .ob-title { font-size: 13px; letter-spacing: 3px; font-weight: 800; color: var(--accent); }
 #okeyBanner .ob-sub { font-size: 12px; color: #9a9abc; margin: 5px 0 9px; }
@@ -1333,7 +1317,7 @@ body::before {
 #ritimOv .rt-pad {
   display: block; margin: 6px auto 14px; width: 132px; height: 132px; border-radius: 50%;
   border: 4px solid #22384A; background: radial-gradient(circle at 40% 35%, #FFF6DD, #E9C88E 70%, #C99A55);
-  font-size: 54px; line-height: 1; cursor: pointer; box-shadow: 0 6px 0 #22384A;
+  font: 700 24px/1 var(--gm-font); color: #22384A; cursor: pointer; box-shadow: 0 6px 0 #22384A;
   touch-action: manipulation; user-select: none;
 }
 #ritimOv .rt-pad:active { transform: translateY(3px); box-shadow: 0 3px 0 #22384A; }
@@ -1778,26 +1762,7 @@ html, body { height: 100%; overflow: hidden; }
   0%, 100% { box-shadow: 0 0 0 3px #9B59B6, 0 0 10px rgba(155,89,182,.6), 0 3px 6px rgba(0,0,0,.4); }
   50%      { box-shadow: 0 0 0 3px #C39BD3, 0 0 22px rgba(155,89,182,1), 0 3px 6px rgba(0,0,0,.4); }
 }
-.tile.hipno::after {
-  content: '🌀';
-  position: absolute;
-  top: 1px;
-  right: 2px;
-  font-size: calc(var(--tw) * .2);
-}
 
-/* ---------- MIKNATIS rozeti (PLAYTEST 28 · GRUP H) ----------
-   Hipnoz rozetiyle AYNI dil ve AYNI olcu, tek fark kose: hipnoz sag ustte
-   durur, miknatis SOL USTTE. Ikisi ayni tasa binebilir (mıknatislanan tas
-   transtaki sayi da olabilir) ve ust uste gelmemeleri gerekir. */
-.tile.magnet::before {
-  content: '🧲';
-  position: absolute;
-  top: 1px;
-  left: 2px;
-  font-size: calc(var(--tw) * .2);
-  z-index: 2;
-}
 /* Ozel tastaki gorunurluk asagida, `content: none` blogunun ARDINDA
    geri aciliyor (bkz. "MIKNATIS ozel tasta da gorunur"). */
 
@@ -3271,30 +3236,6 @@ body.menu-open #app {
 
 /* --- Taş üstü rozetleri (Freedom işareti + asıl-deste-dışı kaynaklar) --- */
 .tile { position: relative; }
-.tile-mark {
-  position: absolute;
-  top: -5px; right: -5px;
-  min-width: 15px; height: 15px;
-  padding: 0 2px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 9.5px; line-height: 1;
-  border-radius: 999px;
-  pointer-events: none;
-  z-index: 3;
-}
-.tile-mark.ff {
-  background: linear-gradient(180deg, #FFD873, #E8A81C);
-  color: #4A3200;
-  border: 1.5px solid #fff;
-  box-shadow: 0 1px 4px rgba(201,138,12,.55);
-}
-.tile-mark.src {
-  top: auto; bottom: -5px; right: -5px;
-  background: #fff;
-  color: #4A5A6B;
-  border: 1.5px solid #9FB2C4;
-  box-shadow: 0 1px 3px rgba(34,56,74,.28);
-}
 
 /* Freedom Fighters işaretli taş: altın kenarlık + yumuşak nabız */
 .tile.ff-mark {
@@ -3310,22 +3251,10 @@ body.menu-open #app {
   animation: none;
   box-shadow: 0 0 0 2px rgba(201,138,12,.45);
 }
-.tile.ff-mark.ff-paid .tile-mark.ff { opacity: .5; filter: grayscale(.6); }
 
 /* Asıl deste dışı taşlar — kaynak başına ayrı kenarlık rengi */
 .tile.src-alien   { outline: 2px dashed rgba(120, 200, 130, .85); outline-offset: -3px; }
-.tile.src-copied  { outline: 2px dashed rgba(120, 150, 210, .85); outline-offset: -3px; }
 .tile.src-revived { outline: 2px dashed rgba(190, 120, 210, .85); outline-offset: -3px; }
-.tile.src-modded  { outline: 2px dashed rgba(210, 160, 100, .85); outline-offset: -3px; }
-/* PLAYTEST 18 · GRUP B — değeri sonradan değişen taş (Sir.by, Kağıt Jokeri,
-   Robin Hood, Adem ile Havva, Kara Kedi…). Diğer kaynak rozetlerinden farkı:
-   taş asıl desteden GELMİŞTİR, yalnız yüzü değişmiştir — bu yüzden kesikli
-   değil NOKTALI kontur, ve turkuaz (hiçbir kaynak rozetinin rengi değil). */
-.tile.src-retuned { outline: 2px dotted rgba(70, 175, 185, .95); outline-offset: -3px; }
-.tile.src-retuned .tile-mark.src {
-  background: linear-gradient(180deg, #A8E4EA, #2F8E99);
-  color: #05323A;
-}
 
 /* --- Bungie Gum (Playtest 9 · Grup Q) ---
    Eski "SABİTLENEN TAŞLAR" kutusunun stilleri SİLİNDİ; artık ayrı bir alan
@@ -3334,43 +3263,8 @@ body.menu-open #app {
 .tile.bungie-back {
   box-shadow: 0 0 0 2px #E88FB4, 0 3px 6px rgba(0,0,0,.4);
 }
-.tile.bungie-back::before {
-  content: '🍬';
-  position: absolute;
-  top: 1px; left: 3px;
-  font-size: calc(var(--tw) * .2);
-  pointer-events: none;
-}
 
-/* --- Paratoner · yem taşı (Playtest 29 · Grup F) ---
-   İşlek o tur tutarsa yıldırımın ineceği taş. Sarı halka + ⚡ işareti;
-   hayaletin soğuk mavisi ve sakızın pembesiyle karışmaz. */
-.tile.bait-tile {
-  box-shadow: 0 0 0 2px #F2C14E, 0 3px 6px rgba(0,0,0,.4);
-}
-.tile.bait-tile::before {
-  content: '⚡';
-  position: absolute;
-  top: 1px; left: 3px;
-  font-size: calc(var(--tw) * .2);
-  pointer-events: none;
-}
 
-/* --- Yankı · hayalet taş (Playtest 29 · Grup B) ---
-   Bir tur yaşayan, atılamayan, el sınırına sayılmayan türetilmiş taş.
-   Sakızın pembe halkasıyla karışmasın diye soğuk mavi-gri bir hâle +
-   📣 işareti taşır ve gövdesi hafif saydamdır (hayalet). */
-.tile.ghost-tile {
-  opacity: .82;
-  box-shadow: 0 0 0 2px #8FD3E8, 0 3px 6px rgba(0,0,0,.4);
-}
-.tile.ghost-tile::before {
-  content: '📣';
-  position: absolute;
-  top: 1px; left: 3px;
-  font-size: calc(var(--tw) * .2);
-  pointer-events: none;
-}
 
 /* --- Dedikodu Masası (Grup F): 3 açık taşlık yan masa --- */
 .combo.gossip-box {
@@ -3727,18 +3621,6 @@ body.menu-open #app {
   pointer-events: none;
 }
 
-/* ============================================================
-   PLAYTEST 6 — GRUP F: eksik 12 boss'un görsel tarafı
-   ============================================================ */
-
-/* boss koşulu kaynaklı taş işaretleri */
-.tile-mark.boss {
-  top: -5px; left: -5px; right: auto;
-  background: linear-gradient(180deg, #C79BE0, #8E44AD);
-  color: #fff;
-  border: 1.5px solid #fff;
-  box-shadow: 0 1px 4px rgba(142,68,173,.5);
-}
 .tile.bm-bsewn   { outline: 2px solid rgba(142,68,173,.85); outline-offset: -3px; opacity: .78; }
 /* PLAYTEST 18 · GRUP A — TERZİ'NİN İĞNESİ (JOKER) dikişi.
    Boss varyantından bilerek AYRI okunur: boss dikişi bir CEZA (soluk, düz
@@ -3746,15 +3628,10 @@ body.menu-open #app {
    kesikli altın-mor "dikiş" konturu alır. */
 .tile.bm-jsewn   { outline: 2px dashed rgba(142,68,173,.95); outline-offset: -3px;
                    box-shadow: 0 0 0 1px rgba(212,175,55,.55) inset; }
-.tile.bm-jsewn .tile-mark.boss {
-  background: linear-gradient(180deg, #E0C879, #B8860B);
-  box-shadow: 0 1px 4px rgba(184,134,11,.55);
-}
 .tile.bm-binf    { outline: 2px solid rgba(90,160,90,.9);   outline-offset: -3px; filter: grayscale(.45); }
 .tile.bm-bglitch { outline: 2px dashed rgba(230,120,60,.95); outline-offset: -3px; animation: bGlitchOutline 1.6s steps(2) infinite; }
 .tile.bm-bff     { box-shadow: 0 0 0 2.5px #8E44AD, 0 0 12px rgba(142,68,173,.5); }
 .tile.bm-bff.bm-done { box-shadow: 0 0 0 2px rgba(142,68,173,.35); }
-.tile.bm-bff.bm-done .tile-mark.boss { opacity: .5; filter: grayscale(.6); }
 /* PLAYTEST 10 (bug) — GLITCH TİTREŞİMİ ARTIK TAŞIN `transform`'UNA DOKUNMAZ.
    Eski hâli `@keyframes bGlitch { 50% { transform: translateX(1px) } }`
    idi ve taşın kendisinde SONSUZ çalışıyordu. CSS'te çalışan bir animasyon
@@ -3763,8 +3640,6 @@ body.menu-open #app {
    uygulanmıyordu → taş seçiliyor ama görsel olarak hiç tepki vermiyordu,
    oyuncu "tıklanmıyor" sanıyordu. Titreşim rozete taşındı, taşta yalnız
    kontur rengi kırpışıyor — görsel kimlik duruyor, etkileşim serbest. */
-.tile.bm-bglitch .tile-mark.boss,
-.tile.bm-bglitchgift .tile-mark.boss { animation: bGlitch 1.6s steps(2) infinite; }
 @keyframes bGlitch {
   0%, 100% { transform: none; opacity: 1; }
   50%      { transform: translateX(1px); opacity: .55; }
@@ -4334,18 +4209,12 @@ body.menu-open #app {
   0%, 100% { outline-color: rgba(74, 175, 80, .95); }
   50%      { outline-color: rgba(74, 175, 80, .45); }
 }
-.tile.bm-zinf .tile-mark.boss {
-  background: linear-gradient(180deg, #8FD694, #4AAF50);
-  box-shadow: 0 1px 4px rgba(74, 175, 80, .5);
-}
 
 
 /* Dr. Frankenstein'ın iki ameliyatının yarattığı taşlar. İkisi de
    "masada üretilmiş" kimliğini paylaşır ama birbirinden ayrılır:
    dirilen sarı-şimşek, dikilmiş turkuaz. */
 .tile.src-stitched { outline: 2px dashed rgba(26, 188, 156, .95); outline-offset: -3px; }
-.tile.src-stitched .tile-mark.src { background: linear-gradient(180deg, #7FE3CE, #16A085); color: #fff; }
-.tile.src-revived  .tile-mark.src { background: linear-gradient(180deg, #FFE08A, #E8A317); color: #4A3505; }
 
 
 /* Playtest 10 · Grup A — Füzyon seçicisi: otomatik açılış başlığı ve
@@ -4370,16 +4239,6 @@ body.menu-open #app {
    ============================================================ */
 #btnTerazi.picking { font-weight: 800; }
 
-/* PLAYTEST 20 · GRUP G — ÇALINTI TAŞ (The Cheating).
-   Koyu bir kontur + gölge: "gizlice alınmış" okuması. */
-.tile.src-stolen {
-  outline: 2px solid rgba(40, 40, 55, .9);
-  outline-offset: -3px;
-  box-shadow: 0 0 10px rgba(20, 20, 35, .5), 0 3px 6px rgba(0,0,0,.35);
-}
-.tile.src-stolen .tile-mark.src {
-  background: linear-gradient(180deg, #4A4A60, #22222E); color: #EDEAF5;
-}
 
 /* ============================================================
    PLAYTEST 11 · GRUP F — Pandora varyant taşları
@@ -4390,13 +4249,11 @@ body.menu-open #app {
   outline-offset: -3px;
   filter: saturate(.75) hue-rotate(-8deg);
 }
-.tile.src-plague .tile-mark.src { background: linear-gradient(180deg, #A8D5A2, #4E8C3F); color: #fff; }
 .tile.src-gift {
   outline: 2px solid #E0B950;
   outline-offset: -3px;
   box-shadow: 0 0 12px rgba(224, 185, 80, .55), 0 3px 6px rgba(0,0,0,.35);
 }
-.tile.src-gift .tile-mark.src { background: linear-gradient(180deg, #FFE9A8, #D9A521); color: #5A4100; }
 
 /* ============================================================
    PLAYTEST 11 · GRUP F — PANDORA'NIN KUTUSU açılış sahnesi
@@ -4411,7 +4268,8 @@ body.menu-open #app {
 #pandoraOv.closing { opacity: 0; transition: opacity .25s ease; }
 #pandoraOv .pd-box { position: relative; text-align: center; width: 340px; }
 #pandoraOv .pd-lid {
-  font-size: 96px; line-height: 1;
+  width: 112px; height: 92px; position: relative; box-sizing: border-box;
+  background: #8E5A2E; border: 6px solid #3A2414; box-shadow: inset 0 -10px 0 #6E4422;
   animation: pdShake .62s ease-in-out;
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.6));
 }
@@ -5710,7 +5568,6 @@ body.game-open #toast { top: 44%; }
   cursor: help;
 }
 .gm-stage #fatalityChip.gm-fatchip.hidden { display: none; }
-.gm-stage #fatalityChip .fc-ico { font-size: 20px; line-height: 1; }
 /* Sınır bu turda aşıldıysa çip doluya döner — hedefin neden düştüğü okunur. */
 .gm-stage #fatalityChip.gm-fatchip.hit {
   background: #C0392B; border-color: #7A2E2E; color: #FFF3F1;
@@ -5761,29 +5618,6 @@ body.game-open #toast { top: 44%; }
   50%      { transform: scale(1.12); }
 }
 
-.cheat-flash {
-  position: absolute; left: 50%; top: 300px; transform: translateX(-50%);
-  z-index: 260; pointer-events: none; text-align: center;
-  padding: 14px 26px; min-width: 340px;
-  border: 3px solid #14301A;
-  background: #8DC63F; color: #14301A;
-  animation: cheatIn .22s ease-out;
-}
-.cheat-flash.bad { background: #E74C3C; color: #FFF3F1; border-color: #7A1E14; }
-.cheat-flash .cf-title {
-  font: 700 26px/1.1 var(--gm-font); letter-spacing: -2px; margin-bottom: 6px;
-}
-.cheat-flash .cf-body { font: 700 16px/1.3 var(--gm-font); letter-spacing: -1px; }
-.cheat-flash.out { animation: cheatOut .38s ease-in forwards; }
-@keyframes cheatIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(.92); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-}
-@keyframes cheatOut {
-  to { opacity: 0; transform: translateX(-50%) translateY(-18px) scale(.96); }
-}
-/* Boss banner'ındaki "bu tur ne deneyecek" satırı diğer ekstralardan ayrılsın. */
-.gm-stage .bb-extra.bb-cheat { color: #FFD9D2; font-weight: 700; }
 
 /* --- RUN BİLGİSİ pop-up'ı ("i" butonu) — deste pop-up'ıyla aynı dil --- */
 #runInfoPop {
@@ -5904,7 +5738,7 @@ body.game-open #toast { top: 44%; }
    konturuna oturan ince bir çerçeve + o konturun üstünde dönen tek bir
    ışık. `.tile-fx` ui.js'teki fxOrbit() ile eklenir (::before/::after
    slotları jokerin emoji rozetinde kullanıldığı için ayrı eleman). */
-.tile.hipno, .tile.bungie-back, .tile.ghost-tile, .tile.bait-tile { box-shadow: none; animation: none; }
+.tile.hipno, .tile.bungie-back { box-shadow: none; animation: none; }
 .tile-fx {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
   box-shadow: inset 0 0 0 3px var(--fx-edge);
@@ -5927,7 +5761,6 @@ body.game-open #toast { top: 44%; }
 .tile-fx.fx-hipno  { --fx-edge: #9B59B6; --fx-lit: #E4C7F2; }
 .tile-fx.fx-bungie { --fx-edge: #E88FB4; --fx-lit: #FFE3EF; }
 .tile-fx.fx-ghost  { --fx-edge: #8FD3E8; --fx-lit: #E6F7FD; }
-.tile-fx.fx-bait   { --fx-edge: #F2C14E; --fx-lit: #FFF2CE; }
 /* Seçim/hover geri bildirimi üstte kalsın (Playtest 10 dersi) */
 #rack .tile.selected .tile-fx { box-shadow: inset 0 0 0 3px var(--fx-edge); }
 
@@ -7089,9 +6922,6 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
 .hint-ov .hint-body b { color: #B7791F; font-weight: 900; }
 #katlaOv .katla-warn { color: #E53E3E; font-weight: 700; }
 .bet-card .bet-target { font-size: 1.15em; font-weight: 700; margin: 6px 0; color: #F5A623; }
-.bet-card.bet-guvenli { box-shadow: 0 0 0 3px #38A169; }
-.bet-card.bet-riskli  { box-shadow: 0 0 0 3px #D69E2E; }
-.bet-card.bet-olumcul { box-shadow: 0 0 0 3px #E53E3E; }
 /* P57 — Figma 279:9897: The Corporates raundun şirketine dönüşür */
 .jk-corporates.corp-kizil { --jk-art: url('assets/game/joker/corporates-kurogane.svg'); }
 .jk-corporates.corp-derin { --jk-art: url('assets/game/joker/corporates-abyssal.svg'); }
@@ -7354,20 +7184,6 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
 .tile.sp-zamanTasi::before, .tile.sp-ates::before, .tile.sp-yankiTasi::before,
 .tile.sp-ayTasi::before, .tile.sp-ayTasiTam::before {
   content: none;
-}
-/* MIKNATIS ozel tasta da gorunur (PLAYTEST 28 · GRUP H).
-   Ustteki kural ozel taslarda `::before`u kapatiyor ve ozgullugu miknatis
-   kuraliyla AYNI (0,2,0) — yani sirasi geç olan kazanir. Bu yuzden rozet
-   TAM BURADA yeniden aciliyor. Onemi buyuk: oyuncunun mıknatislayacagi ilk
-   sey zaten Altin Tas gibi yatirim yaptigi bir OZEL tastir; rozet orada
-   gorunmezse kartin calistiginin tek kaniti raund basi bildirimi kalir. */
-.tile.magnet::before {
-  content: '🧲';
-  position: absolute;
-  top: 1px;
-  left: 2px;
-  font-size: calc(var(--tw) * .2);
-  z-index: 2;
 }
 /* Taşlaşmış (stoned) taş da şablonunu korusun — yalnız soluklaşsın. */
 /* GRUP J (2026-09-06) — MEDUSA'NIN TAŞLAŞTIRDIĞI TAŞ, FIGMA TASARIMI.
@@ -7724,7 +7540,8 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
   transform: rotate(180deg);
   animation: mcGoBob 1.1s steps(2, end) infinite;
 }
-@keyframes mcGoBob { 0%, 100% { margin-top: -9px; } 50% { margin-top: -4px; } }
+/* PERF — margin-top yerine translate: her karede yerleşim (layout) hesaplatmasın */
+@keyframes mcGoBob { 0%, 100% { translate: 0 0; } 50% { translate: 0 5px; } }
 /* Henüz sırası gelmemiş kart tasarımda AÇIK durur; yalnız sönükleşir.
    KATLANMIŞ kart SÖNÜKLEŞMEZ: Figma V2'de katlanmış iki kart, açık boss
    kartıyla AYNI yeşil tonda duruyor — katlanmanın kendisi zaten "bu raund
@@ -8081,7 +7898,7 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
   position: absolute; top: -8px; right: -8px;
   width: 20px; height: 20px; border-radius: 50%;
   background: #2E9E4C; color: #fff;
-  font: 800 12px/20px system-ui, sans-serif; text-align: center;
+  font: 800 12px/20px var(--gm-font); text-align: center;
   box-shadow: 0 1px 3px rgba(0,0,0,.3);
   display: none; z-index: 2;
 }
@@ -8186,7 +8003,7 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
   box-shadow: 0 4px 0 rgba(0, 0, 0, .4);
 }
 .pk-ov.slot-ov .pk-rcard .pk-name { color: var(--gm-dark); font: 700 14px/1.1 var(--gm-font); }
-.pk-ov.slot-ov .pk-rcard .pk-desc { color: var(--gm-dark); font-family: system-ui, 'Segoe UI', sans-serif; font-size: 11.5px; }
+.pk-ov.slot-ov .pk-rcard .pk-desc { color: var(--gm-dark); font-family: var(--gm-font); font-size: 11.5px; }
 .pk-ov.slot-ov .pk-sym .pk-name { font: 700 12px/1.1 var(--gm-font); }
 
 /* P59 — STAGE SONU ÖDÜL ÇARKI da slot makinesi dilinde (yalnız görünüm;
@@ -8237,7 +8054,7 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
 #upgradeScene .up-card.landed .up-reel { border-color: transparent; background: transparent; }
 #upgradeScene .up-name { font: 700 14px/1.15 var(--gm-font); }
 #upgradeScene .up-card.landed .up-sym .up-name { color: var(--gm-dark); }
-#upgradeScene .up-desc { color: var(--gm-dark); font-family: system-ui, 'Segoe UI', sans-serif; }
+#upgradeScene .up-desc { color: var(--gm-dark); font-family: var(--gm-font); }
 #upgradeScene #btnUpContinue {
   background: var(--gm-light); color: var(--gm-dark);
   border: 4px solid var(--gm-edge); border-radius: 8px;
@@ -8365,10 +8182,8 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
 }
 .katla-fold .kf-old { opacity: .55; text-decoration: line-through; font-size: 40px; }
 .katla-fold .kf-new { color: #FFD76A; animation: kfNew .5s .35s both cubic-bezier(.2,.9,.3,1.5); }
-.katla-fold .kf-dice { font-size: 40px; animation: kfDice .6s; }
 @keyframes kfIn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes kfNew { from { transform: scale(2.2); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes kfDice { from { transform: rotate(-540deg) scale(.4); } to { transform: none; } }
 
 /* JACKPOT */
 .jp-ov {
@@ -8527,8 +8342,7 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
 .ep-def-title { font: 700 13px/1 var(--gm-font); opacity: .85; }
 .ep-def-name { font: 700 17px/1.1 var(--gm-font); color: var(--gm-turn-on); }
 .ep-def-art { width: 66px; height: 90px; background: var(--jk-art) no-repeat center / 100% 100%; image-rendering: pixelated; }
-.ep-def-ico { font-size: 44px; line-height: 1; }
-.ep-def-why { font: 12px/1.35 system-ui, 'Segoe UI', sans-serif; opacity: .9; }
+.ep-def-why { font: 12px/1.35 var(--gm-font); opacity: .9; }
 .ep-btn {
   display: block; width: 100%; box-sizing: border-box; cursor: pointer;
   background: var(--gm-light); color: var(--gm-dark);
@@ -8598,12 +8412,12 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
 .rp-art-soon { background: rgba(0, 0, 0, .12); border-color: rgba(0, 0, 0, .25); box-shadow: none; }
 .rp-art-soon span { font: 700 64px/1 var(--gm-font); color: var(--gm-dark); opacity: .45; }
 .rp-locked .rp-art span { filter: grayscale(1) opacity(.5); }
-.rp-lock { position: absolute; right: -8px; bottom: -8px; font-size: 26px; font-style: normal; }
+.rp-lock { position: absolute; right: -8px; bottom: -8px; font: 700 12px/1 var(--gm-font); font-style: normal; padding: 4px 6px; background: var(--gm-dark); color: var(--gm-light); border: 2px solid var(--gm-light); }
 .rp-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .rp-name { font: 700 22px/1.1 var(--gm-font); color: var(--gm-dark); text-align: center; letter-spacing: -1px; }
 .rp-desc {
   flex: 1; background: rgba(255, 255, 255, .5); color: var(--gm-dark); border-radius: 6px; padding: 10px 12px;
-  font: 13px/1.45 system-ui, 'Segoe UI', sans-serif; text-align: center;
+  font: 13px/1.45 var(--gm-font); text-align: center;
   display: flex; flex-direction: column; justify-content: center; gap: 8px;
 }
 .rp-locked { filter: saturate(.4); }
@@ -8764,17 +8578,18 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
 .pk-ov .pk-card:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, .4); }
 .pk-ov .pk-name { color: var(--gm-dark); font: 700 14px/1.15 var(--gm-font); }
 .pk-ov .pk-sub { color: var(--gm-dark); opacity: .7; }
-.pk-ov .pk-desc { color: var(--gm-dark); font: 12px/1.4 system-ui, 'Segoe UI', sans-serif; }
-/* bahis türü = kartın üst kenar rengi (eski renkli halkanın yerine) */
-.pk-ov .bet-card { box-shadow: 0 4px 0 rgba(0, 0, 0, .4); }
-.pk-ov .bet-card.bet-guvenli { border-top-color: #2FAE6B; }
-.pk-ov .bet-card.bet-riskli  { border-top-color: #F0A92A; }
-.pk-ov .bet-card.bet-olumcul { border-top-color: #E5484D; }
+.pk-ov .pk-desc { color: var(--gm-dark); font: 12px/1.4 var(--gm-font); }
+/* P142 (kullanıcı 2026-11-27) — bahis türü kartın TÜM çerçevesinin rengi; yanındaki renkli nokta emojisi kalktı.
+   Kalın tek renk çerçeve, oyunun 4px kenar dilini korur ve kart uzaktan da renginden tanınır. */
+.pk-ov .bet-card { box-shadow: 0 4px 0 rgba(0, 0, 0, .4); border-width: 5px; }
+.pk-ov .bet-card.bet-guvenli { border-color: #2FAE6B; }
+.pk-ov .bet-card.bet-riskli  { border-color: #F0A92A; }
+.pk-ov .bet-card.bet-olumcul { border-color: #E5484D; }
 .pk-ov .bet-card .bet-target { color: var(--gm-dark); font: 700 18px/1.1 var(--gm-font); }
 .pk-ov .side-odds { color: var(--gm-dark); }
 .pk-ov .bet-peek .bp-lbl { color: var(--gm-light); }
 #katlaOv .katla-warn { color: var(--gm-turn-on) !important; }
-.hint-ov .hint-body { color: var(--gm-light); font-family: system-ui, 'Segoe UI', sans-serif; }
+.hint-ov .hint-body { color: var(--gm-light); font-family: var(--gm-font); }
 .hint-ov .hint-body b { color: var(--gm-turn-on); }
 /* düğmeler: STOP gibi basılır */
 .pk-ov .btn, .tp-box .btn, .pp-box .btn, #modal .btn, .ob-box .btn, .rt-box .btn, .km-box .btn, .pd-box .btn {
@@ -8831,7 +8646,7 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
 .hl-win b { color: var(--gm-turn-on); }
 .hl-how { background: var(--gm-light); color: var(--gm-dark); border-radius: 8px; padding: 10px 14px; text-align: left; width: 100%; box-sizing: border-box; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
 .hl-how-t { font: 700 14px/1 var(--gm-font); margin-bottom: 6px; }
-.hl-how ol { margin: 0; padding-left: 20px; font: 13px/1.45 system-ui, 'Segoe UI', sans-serif; }
+.hl-how ol { margin: 0; padding-left: 20px; font: 13px/1.45 var(--gm-font); }
 .hl-table { display: flex; justify-content: center; align-items: flex-end; gap: 22px; background: rgba(0,0,0,.28); border-radius: 8px; padding: 12px 20px; box-shadow: inset 0 3px 0 rgba(0,0,0,.35); }
 .hl-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .hl-lbl { font: 700 11px/1 var(--gm-font); color: var(--gm-light); opacity: .85; letter-spacing: .5px; }
@@ -9379,7 +9194,7 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
   font: 700 13px/1 var(--gm-font); color: var(--gm-dark); background: var(--gm-turn-on);
   border-radius: 6px; padding: 5px 8px;
 }
-.rw-notes { font: 13px/1.4 system-ui, 'Segoe UI', sans-serif; color: var(--gm-light); opacity: .9; display: flex; flex-direction: column; gap: 3px; }
+.rw-notes { font: 13px/1.4 var(--gm-font); color: var(--gm-light); opacity: .9; display: flex; flex-direction: column; gap: 3px; }
 .rw-notes b { color: var(--gm-turn-on); }
 #overlay.rw-open #modalBtn { margin-top: 16px; width: 100%; font-size: 22px; padding: 14px 20px; }
 /* jackpot "ayrıntılar" içinde de aynı fiş */
@@ -9429,13 +9244,13 @@ body.game-open .note-card.out { opacity: 0; transform: translateY(-14px); }
   background: var(--jk-art, none) no-repeat center / 100% 100%; image-rendering: pixelated;
 }
 .col-mus .cm-note {
-  display: flex; align-items: center; justify-content: center; font-size: 30px;
+  display: flex; align-items: center; justify-content: center;
   background: rgba(0, 0, 0, .12); box-shadow: inset 0 2px 0 rgba(0, 0, 0, .12);
 }
 .col-mus .cm-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; text-align: left; }
 .col-mus .cm-txt b { font: 700 16px/1.1 var(--gm-font); letter-spacing: -.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   padding-block: .45em .3em; margin-block: -.45em -.3em; }
-.col-mus .cm-txt small { font: 500 12px/1.3 system-ui, sans-serif; opacity: .85; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.col-mus .cm-txt small { font: 500 12px/1.3 var(--gm-font); opacity: .85; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .col-mus .cm-play {
   flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
   background: var(--gm-turn-on); color: var(--gm-dark); border: 3px solid var(--gm-dark);
@@ -9637,10 +9452,11 @@ html[data-theme="kozmik"] body.game-open #cosmos {
   image-rendering: pixelated;
   filter: hue-rotate(var(--kz-hue));
   transition: filter 1.2s ease;
-  animation: kzDrift 90s ease-in-out infinite alternate;
+  /* PERF — eskiden 90 sn'lik sonsuz "süzülme" (kzDrift) vardı: hue-rotate filtreli, ekrandan büyük
+     bu katman yüzünden GPU HER KAREDE (60/sn) tüm ekranı yeniden çiziyordu; masaüstü exe'de hafif
+     kasmanın ana nedeni buydu (hareket %1'di, gözle neredeyse görünmüyordu). Artık sabit. */
+  transform: scale(1.03);
 }
-@keyframes kzDrift { from { transform: translate(-1%, .5%) scale(1.02); } to { transform: translate(1%, -.5%) scale(1.05); } }
-@media (prefers-reduced-motion: reduce) { html[data-theme="kozmik"] body.game-open #cosmos { animation: none; } }
 /* store katmanı oyunu ÖRTMELİ (şeffaf olunca arkadaki ıstaka görünüyordu) → kendi bulutsusu */
 html[data-theme="kozmik"] #storeOverlay#storeOverlay { background: #05060F; backdrop-filter: none; isolation: isolate; overflow: hidden; }
 html[data-theme="kozmik"] #storeOverlay::before {
@@ -9831,7 +9647,7 @@ html[data-theme="boss"][data-boss-ui="kirby"] {
   --img-tile-back: url('assets/game/boss/sir-by/tile-back.png');
   --img-rack-glow: url('assets/game/boss/sir-by/rack-glow.png');
   --boss-char: url('assets/game/boss/sir-by/character.png');
-  --boss-char-x: 0px; --boss-char-y: 0px; --boss-char-w: 1920px; --boss-char-h: 1080px;
+  --boss-char-x: -300px; --boss-char-y: -300px; --boss-char-w: 2520px; --boss-char-h: 1680px;
   --st-edge: #1E1E1E; --st-edge-soft: rgba(30, 30, 30, .38); --st-bg: #ECE8DC;
   --st-head: #1E1E1E; --st-rule: rgba(30, 30, 30, .35); --st-glow: rgba(232, 228, 218, .25);
 }
@@ -9945,7 +9761,7 @@ html[data-theme="boss"][data-boss-ui="kelebek"] {
   --img-tile-back: url('assets/game/boss/kelebek/tile-back.png');
   --img-rack-glow: url('assets/game/boss/kelebek/rack-glow.png');
   --boss-char: url('assets/game/boss/kelebek/character.png');
-  --boss-char-x: 0px; --boss-char-y: 0px; --boss-char-w: 1920px; --boss-char-h: 1080px;
+  --boss-char-x: -300px; --boss-char-y: -300px; --boss-char-w: 2520px; --boss-char-h: 1680px;
   --st-edge: #26323A; --st-edge-soft: rgba(38, 50, 58, .38); --st-bg: #FFE7BC;
   --st-head: #26323A; --st-rule: rgba(38, 50, 58, .35); --st-glow: rgba(124, 228, 234, .25);
 }
@@ -10212,7 +10028,7 @@ html[data-theme="boss"][data-boss-ui="dervish"] {
   --img-tile-back: url('assets/game/boss/glitch/tile-back.png');
   --img-rack-glow: url('assets/game/boss/glitch/rack-glow.png');
   --boss-char: url('assets/game/boss/glitch/character.png');
-  --boss-char-x: 0px; --boss-char-y: 0px; --boss-char-w: 1920px; --boss-char-h: 1080px;
+  --boss-char-x: -300px; --boss-char-y: -300px; --boss-char-w: 2520px; --boss-char-h: 1680px;
   --st-edge: #0A0A12; --st-edge-soft: rgba(10, 10, 18, .38); --st-bg: #DFFFE6;
   --st-head: #0A0A12; --st-rule: rgba(10, 10, 18, .35); --st-glow: rgba(57, 216, 106, .25);
 }
@@ -10665,7 +10481,7 @@ html[data-theme="boss"][data-boss-ui="lanetliCocuk"] {
 .tr-ov .tr-tab.on { background: var(--gm-light); color: var(--gm-dark); }
 .tr-ov .tr-sub {
   margin: 6px 0 10px; color: var(--gm-light); opacity: .78;
-  font: 12.5px/1.35 system-ui, 'Segoe UI', sans-serif;
+  font: 12.5px/1.35 var(--gm-font);
 }
 .tr-ov .tr-main { flex: 1 1 auto; min-height: 0; display: flex; gap: 16px; }
 .tr-ov .tr-body {
@@ -10687,7 +10503,7 @@ html[data-theme="boss"][data-boss-ui="lanetliCocuk"] {
 .tr-panel[data-tab="boss"] .tr-run-only { display: none !important; }
 .tr-ov .tr-sec + .tr-sec { margin-top: 16px; padding-top: 14px; border-top: 2px dashed color-mix(in srgb, var(--gm-light) 32%, transparent); }
 .tr-ov .tr-body h3 { margin: 0 0 6px; font: 700 22px/1.1 var(--gm-font); letter-spacing: -1px; color: var(--gm-light); }
-.tr-ov .tr-hint { margin: 0 0 6px; color: var(--gm-light); opacity: .7; font: 12px/1.3 system-ui, 'Segoe UI', sans-serif; }
+.tr-ov .tr-hint { margin: 0 0 6px; color: var(--gm-light); opacity: .7; font: 12px/1.3 var(--gm-font); }
 /* nadirlik / kademe başlığı = küçük renkli plaka */
 .tr-ov .tr-rar {
   display: block; width: max-content; margin: 12px 0 8px; padding: 5px 10px 4px; border-radius: 4px;
@@ -10707,7 +10523,7 @@ html[data-theme="boss"][data-boss-ui="lanetliCocuk"] {
 /* seçili kart: temanın vurgu tonu */
 .tr-ov .tr-card.on { outline-color: var(--gm-turn-on); }
 .tr-ov .tr-card .tr-check, .tr-ov .tr-boss .tr-check {
-  background: var(--gm-turn-on); color: var(--gm-dark); font: 800 12px/20px system-ui, sans-serif;
+  background: var(--gm-turn-on); color: var(--gm-dark); font: 800 12px/20px var(--gm-font);
 }
 /* boss kartları */
 .tr-boss-grid { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -10740,7 +10556,7 @@ html[data-theme="boss"][data-boss-ui="lanetliCocuk"] {
 .tr-bs-txt { min-width: 0; }
 .tr-bs-name { font: 700 20px/1 var(--gm-font); letter-spacing: -1px; color: var(--gm-turn-on); text-transform: uppercase; }
 .tr-bs-tier { margin: 5px 0 6px; font: 700 12px/1.25 var(--gm-font); opacity: .85; }
-.tr-bs-desc { font: 12.5px/1.35 system-ui, 'Segoe UI', sans-serif; opacity: .95; }
+.tr-bs-desc { font: 12.5px/1.35 var(--gm-font); opacity: .95; }
 .tr-bs-target {
   display: inline-block; margin-top: 8px; padding: 5px 8px 4px; border-radius: 4px; white-space: nowrap;
   background: var(--gm-light); color: var(--gm-dark); font: 700 14px/1 var(--gm-font); letter-spacing: -.6px;
@@ -10795,7 +10611,7 @@ html[data-theme="boss"][data-boss-ui="lanetliCocuk"] {
 .bt-why {
   margin-top: 4px; padding: 10px 12px; border-radius: 6px; text-align: left;
   background: rgba(0, 0, 0, .25); border: 3px solid var(--gm-turn-on); color: var(--gm-light);
-  font: 13px/1.4 system-ui, 'Segoe UI', sans-serif;
+  font: 13px/1.4 var(--gm-font);
 }
 .bt-box .ep-foot .ep-btn { width: min(380px, 100%); }
 
@@ -10966,7 +10782,6 @@ html:is([data-theme="kumarhane"], [data-theme="kozmik"], [data-theme="boss"]) .g
 #settingsOv .set-chk:hover { filter: brightness(1.05); }
 #settingsOv .set-chk:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
 #settingsOv .set-chk .set-label { flex: 1; }
-#settingsOv .chk-ico { font-size: 18px; }
 #settingsOv .chk-box, #settingsOv .chk-mini {
   position: relative; flex: 0 0 32px; width: 32px; height: 32px; box-sizing: border-box; padding: 0;
   border: 3px solid var(--gm-dark); border-radius: 6px; background: rgba(0, 0, 0, .08);
@@ -10974,7 +10789,7 @@ html:is([data-theme="kumarhane"], [data-theme="kozmik"], [data-theme="boss"]) .g
 }
 #settingsOv .set-chk.on .chk-box, #settingsOv .chk-mini.on { background: var(--gm-dark); }
 #settingsOv .set-chk.on .chk-box::after, #settingsOv .chk-mini.on::after {
-  content: '✓'; color: var(--gm-turn-on); font: 900 22px/1 system-ui, sans-serif;
+  content: '✓'; color: var(--gm-turn-on); font: 900 22px/1 var(--gm-font);
 }
 #settingsOv .chk-mini { cursor: pointer; }
 #settingsOv .set-locked { cursor: default; opacity: .8; }
@@ -10988,7 +10803,7 @@ html:is([data-theme="kumarhane"], [data-theme="kozmik"], [data-theme="boss"]) .g
 /* GİT satırları */
 #settingsOv .set-go-row { display: flex; align-items: center; gap: 14px; text-align: left; }
 #settingsOv .go-txt { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-#settingsOv .go-txt small { font: 12.5px/1.35 system-ui, 'Segoe UI', sans-serif; opacity: .85; }
+#settingsOv .go-txt small { font: 12.5px/1.35 var(--gm-font); opacity: .85; }
 #settingsOv .set-go {
   flex: 0 0 auto; min-width: 92px; padding: 11px 16px; cursor: pointer;
   background: var(--gm-dark); color: var(--gm-light); border: 0; border-radius: 6px;
@@ -11008,7 +10823,7 @@ html:is([data-theme="kumarhane"], [data-theme="kozmik"], [data-theme="boss"]) .g
   background: linear-gradient(90deg, color-mix(in srgb, var(--gm-turn-on) 70%, var(--gm-dark)) var(--p), var(--gm-dark) var(--p));
 }
 #settingsOv .st-total .ep-val { font-size: 18px; }
-#settingsOv .st-since { margin: 10px 0 0; color: var(--gm-light); opacity: .75; font: 12px/1.3 system-ui, 'Segoe UI', sans-serif; text-align: center; }
+#settingsOv .st-since { margin: 10px 0 0; color: var(--gm-light); opacity: .75; font: 12px/1.3 var(--gm-font); text-align: center; }
 @media (max-width: 760px) { #settingsOv .st-cols { grid-template-columns: 1fr; } }
 @media (max-height: 760px) { #settingsOv .set-body { height: 380px; } }
 @media (max-height: 680px) { #settingsOv .set-body { height: 320px; } }
@@ -12003,7 +11818,7 @@ html[data-theme="kozmik"] .gm-stage .gm-meld-h { color: var(--kz-neon); text-sha
 #settingsOv .set-pane[data-pane="extra"] { gap: 6px; }
 /* denetim UI-04 + UI-11 — çizimsiz joker adı store'da / trainer'da piksel yazıya düşüp karttan taşıyordu:
    oyun ekranı ve haritadaki yazı ailesi her yerde */
-.joker-tile .jt-name { font-family: "Segoe UI", Arial, sans-serif; overflow-wrap: anywhere; }
+.joker-tile .jt-name { font-family: var(--gm-font); overflow-wrap: anywhere; }
 /* denetim UI-05 — sağ sütundaki Ay Kuyusu'nda durum satırı kesiliyordu ("Sonraki tur DOLUN…"): iki satıra izin */
 .gm-stage #ayWell.gm-well.aw-side .aw-status { white-space: normal; line-height: 1.25; text-overflow: clip; }
 /* denetim UI-07 — Kahin kutusundaki 🔮 piksel yazı yedeğinde ~9px çiziliyordu */
@@ -12195,7 +12010,7 @@ html .gm-stage #bossBanner.gm-boss-cond.bb-glow {
 .bn-degisti .bn-item { border-left-color: #E08A1E; }
 .bn-duzeldi .bn-item { border-left-color: #3D86D6; }
 .bn-h { display: block; font: 700 17px/1.15 var(--gm-font); margin-bottom: 3px; }
-.bn-d { display: block; font: 15px/1.4 system-ui, 'Segoe UI', sans-serif; }
+.bn-d { display: block; font: 15px/1.4 var(--gm-font); }
 .bn-box .pk-foot .ep-btn { min-width: 320px; min-height: 58px; }
 @media (max-width: 600px) {
   .bn-h { font-size: 15px; } .bn-d { font-size: 13px; }
@@ -12262,11 +12077,6 @@ html .gm-stage #bossBanner.gm-boss-cond.bb-glow {
 /* kullanıcı 2026-10-25 — Lady Luck taş çalma animasyonu (ladyStealAnim) */
 .gm-stage .tile.ll-fly { position: absolute; width: 81px; height: 110px; z-index: 60; pointer-events: none;
   box-shadow: 0 0 0 4px #FF4FA3, 0 0 26px 8px rgba(255, 79, 163, .65); }
-.gm-stage .ll-kiss { position: absolute; z-index: 61; pointer-events: none; font-size: 64px; line-height: 1;
-  font-family: "Segoe UI Emoji", "Segoe UI Symbol", sans-serif; transform: translate(-50%, -50%);
-  animation: llKiss 1.1s ease-out forwards; }
-@keyframes llKiss { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 0; } 30% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
-  100% { transform: translate(-50%, -90%) scale(1); opacity: 0; } }
 
 /* kullanıcı 2026-10-28 — BULUNAMADI kartı (kilit yalnız modu kapalı kartlarda) + moda özel kartların mod rengi */
 .col-nf-art { width: 110px; height: 150px; background: url('assets/game/joker/bulunamadi.svg') no-repeat center / 100% 100%; image-rendering: pixelated; }
@@ -12329,9 +12139,9 @@ html[data-theme="kozmik"][data-run="lanetli"][data-lb-screen="map"] { --lb-bg: v
 html[data-theme="kozmik"][data-run="lanetli"] body.game-open { background: #08050E; }
 html[data-theme="kozmik"][data-run="lanetli"] body.game-open #cosmos {
   filter: none; background: var(--lb-bg) center / cover no-repeat #08050E; image-rendering: pixelated;
-  animation: lbFloat 70s ease-in-out infinite alternate;
+  /* PERF — kzDrift ile aynı neden: sonsuz lbFloat tam ekranı her kare yeniden çizdiriyordu → sabit */
+  animation: none; transform: scale(1.04);
 }
-@keyframes lbFloat { from { transform: translate(-.6%, .8%) scale(1.03); } to { transform: translate(.6%, -.8%) scale(1.05); } }
 /* çürüyen çerçeveler (lbRot): kenar sprite'ları + seyrek glitch titremesi */
 .lb-rot { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 6; animation: lbJit 6s steps(1) infinite; }
 html[data-lb-decay="3"] .lb-rot { animation-duration: 3.2s; }
@@ -12454,12 +12264,9 @@ html[data-theme="kozmik"][data-run="lanetli"] .gm-stage #rack::after { filter: h
   background: #3B1660; border: 3px solid #B46CFF; box-shadow: 0 0 10px rgba(180, 108, 255, .5), 0 4px 0 rgba(0, 0, 0, .4); cursor: help; }
 .totem-chip.r-legendary { border-color: #FFB84D; box-shadow: 0 0 12px rgba(255, 184, 77, .55), 0 4px 0 rgba(0, 0, 0, .4); }
 .pk-ico.totem-ico { font-size: 44px; }
-/* Parti 2 taş işaretleri */
-.tile .tile-mark.cmark { position: absolute; left: 3px; top: 2px; font: 13px/1 "Segoe UI Emoji", sans-serif; pointer-events: none; }
 .gm-stage .tile.fossil-tile { outline: 3px solid #C9A46A; outline-offset: -1px; background-image: linear-gradient(160deg, #f3ead6 0%, #d9c8a4 100%); }
 .gm-stage .tile.kabus-tile { outline: 3px solid #B46CFF; outline-offset: -1px; box-shadow: 0 0 12px rgba(180, 108, 255, .8); }
 .gm-stage .tile.anom-tile { outline: 3px dashed #5CFF9D; outline-offset: -1px; }
-.gm-stage .tile.sentinel-tile { outline: 3px solid #9FE8FF; outline-offset: -1px; }
 .nobetci-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 600px; }
 .nobetci-row .tile { cursor: pointer; }
 .altar-ov button.pk-card.altar-card { cursor: pointer; justify-content: center; min-height: 140px; }
@@ -12523,7 +12330,6 @@ html[data-theme="kozmik"][data-run="lanetli"] .gm-stage #rack::after { filter: h
   box-shadow: 0 0 14px rgba(92, 255, 157, .85); }
 .gm-stage .tile.rot-4 { outline-color: #3A3340; background-image: linear-gradient(160deg, #8b8392 0%, #6d6574 100%); box-shadow: none; }
 .gm-stage .tile.rot-4 .num, .gm-stage .tile.rot-4 .dot { opacity: .35; }
-.tile .tile-mark.rotm { position: absolute; right: 3px; top: 3px; left: auto; bottom: auto; display: flex; pointer-events: none; }
 /* SESSİZ RAUND — harita kartında mor şerit, yol haritasında düğüm işareti */
 .gm-stage .map-card .mc-silent { position: absolute; left: 50%; top: -18px; transform: translateX(-50%); padding: 6px 14px; border-radius: 8px;
   background: #3B1660; border: 3px solid #C9A6FF; color: #E9D5FF; font: 700 18px/1 var(--gm-font); letter-spacing: 2px; white-space: nowrap; cursor: help; z-index: 2; }
@@ -12546,11 +12352,6 @@ html[data-theme="kozmik"][data-run="lanetli"] .gm-stage #rack::after { filter: h
 body.cocuk-fog #rack .tile:not(.deck-joker) .num { visibility: hidden; }
 body.cocuk-fog #rack .tile:not(.deck-joker)::after { content: '?'; position: absolute; left: 0; right: 0; top: 14%; text-align: center;
   font: 700 calc(var(--tw, 66px) * .5)/1 var(--gm-font); color: rgba(60, 20, 80, .35); pointer-events: none; }
-/* Faz 2 — Dokunaç Kilidi: mor-yeşil sarmal bant + soluk yüz */
-.tile.cocuk-lock { position: relative; filter: saturate(.6) brightness(.85); }
-.tile.cocuk-lock .cl-vine { position: absolute; inset: -3px; border-radius: 8px; pointer-events: none; z-index: 2;
-  background: repeating-linear-gradient(135deg, rgba(92, 255, 157, .0) 0 12px, rgba(92, 255, 157, .6) 12px 15px, rgba(122, 46, 168, .7) 15px 19px, rgba(92, 255, 157, .0) 19px 34px);
-  box-shadow: inset 0 0 0 3px #7A2EA8, 0 0 10px rgba(122, 46, 168, .8); }
 /* faz yazısı */
 #cocukFx { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; pointer-events: auto;
   background: radial-gradient(ellipse at center, rgba(30, 6, 46, .92) 0%, rgba(10, 0, 20, .55) 75%); animation: ckIn .35s ease-out; }
@@ -12731,7 +12532,6 @@ html[data-theme="amber"] .ep-btn.ep-blue { color: #4A2608; }
     url('assets/game/gem-l2.svg') no-repeat     0     0   / 100%   100%;
 }
 .tile.apple-tile .dot::after { display: none; }
-.tile.apple-tile::after { display: none !important; }
 
 
 /* P122 — oyun hissi: sahne içi beyaz parlama, yükselen sayı, kıvılcım patlaması (ui.js stageFlash/popText/sparkBurst) */
@@ -12768,14 +12568,10 @@ html[data-theme="amber"] .ep-btn.ep-blue { color: #4A2608; }
   transform: perspective(420px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transition: transform .14s ease-out;
 }
-@keyframes jkIdle {
-  0%, 100% { rotate: -1.1deg; translate: 0 0; }
-  50%      { rotate: 1.1deg;  translate: 0 -2px; }
-}
-html.fx-on .gm-stage .joker-tile.has-art .jt-art { animation: jkIdle 3.6s ease-in-out infinite; }
-html.fx-on .gm-stage .joker-tile:nth-child(2n).has-art .jt-art { animation-delay: -1.2s; animation-duration: 4.1s; }
-html.fx-on .gm-stage .joker-tile:nth-child(3n).has-art .jt-art { animation-delay: -2.3s; animation-duration: 3.3s; }
-@media (prefers-reduced-motion: reduce) { html.fx-on .gm-stage .joker-tile.has-art .jt-art { animation: none; } }
+
+/* P142 (kullanıcı 2026-11-27: "bu sefer de yukarı aşağı çizgileri değişiyor") — boşta salınım KALKTI: oyun tuvali
+   ölçekli olduğu için 2 px'lik süzülme bile ekranda kesirli piksele düşüyor, çizgili piksel çizimin satırlarını
+   oynatıyordu. Kartlar boştayken sabit; imlece eğilme ve olay animasyonları duruyor. */
 
 
 /* P123 — DOKUNMATİK SÜRÜKLEME (iPad). Sürüklenebilir taş/joker kartında parmak hareketi tarayıcıya
@@ -12899,10 +12695,10 @@ html[data-theme="boss"][data-boss-ui="corporates"] #gameScreen #corpScreen:not([
 .col-total { display: flex; align-items: center; gap: 12px; margin: 2px 2px 14px; }
 .col-total .ct-label { font: 700 14px/1 var(--gm-font); color: var(--gm-light); white-space: nowrap; }
 .col-total .ct-num { font: 700 14px/1 var(--gm-font); color: var(--gm-dark); background: var(--gm-light); border-radius: 6px; padding: 6px 10px; box-shadow: 0 3px 0 rgba(0, 0, 0, .4); }
-.col-total .cc-bar { flex: 1; height: 16px; border-color: var(--gm-light); background: rgba(0, 0, 0, .3); }
-.col-total .cc-bar i { background: var(--gm-light); }
-.cc-bar { display: block; position: relative; width: 78%; height: 12px; border: 3px solid var(--gm-dark); border-radius: 4px; background: rgba(0, 0, 0, .12); overflow: hidden; }
-.cc-bar i { position: absolute; inset: 0 auto 0 0; background: var(--gm-dark);
+.col-total .col-prog { flex: 1; height: 16px; border-color: var(--gm-light); background: rgba(0, 0, 0, .3); }
+.col-total .col-prog i { background: var(--gm-light); }
+.col-prog { display: block; position: relative; width: 78%; height: 12px; border: 3px solid var(--gm-dark); border-radius: 4px; background: rgba(0, 0, 0, .12); overflow: hidden; }
+.col-prog i { position: absolute; inset: 0 auto 0 0; background: var(--gm-dark);
   background-image: repeating-linear-gradient(90deg, transparent 0 10px, rgba(255, 255, 255, .18) 10px 12px); }
 .col-hub { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows: minmax(112px, auto); }
 .col-hub .col-cat { min-width: 0; text-align: center; }
@@ -12911,7 +12707,7 @@ html[data-theme="boss"][data-boss-ui="corporates"] #gameScreen #corpScreen:not([
 .col-cat .cc-name { font-size: 20px; }
 .col-cat.big .cc-name { font-size: 30px; }
 .col-cat .cc-count { font-size: 14px; }
-.col-cat.big .cc-bar { width: 70%; height: 16px; }
+.col-cat.big .col-prog { width: 70%; height: 16px; }
 .cc-fan { position: relative; display: block; width: 210px; height: 128px; margin: 4px 0 10px; }
 .cc-fan > span { position: absolute; left: 64px; top: 4px; width: 82px; height: 112px; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .35)); }
 .cc-fan > span:nth-child(1) { transform: rotate(-13deg) translate(-50px, 10px); }
@@ -12927,3 +12723,107 @@ html[data-theme="boss"][data-boss-ui="corporates"] #gameScreen #corpScreen:not([
   .col-hub .col-cat.big { grid-column: span 2; grid-row: auto; }
   .col-cat .cc-name { font-size: 17px; }
 }
+
+/* ============================================================
+   PERF (2026-11-26) — TAM EKRAN BULANIKLIK KALDIRILDI.
+   Karartma katmanlarındaki `backdrop-filter: blur(...)` her karede tüm
+   ekranı yeniden bulanıklaştırıyordu: arkada bir şey kıpırdadıkça (menü
+   maskotu, joker parıltısı) GPU kare başına ~57 ms harcıyor, oyun ~17
+   FPS'e düşüyordu — en çok Trainer kurulum ekranında (masaüstü exe'de
+   "kasma"). Bulanıklık olmadan kare ~2 ms. Katmanların koyu rengi (.72–.85)
+   zaten arkayı bastırıyor; görünüm farkı çok küçük. Dosya sonunda ve
+   !important: eski kuralların hepsini tek yerden ezer.
+   ============================================================ */
+*, *::before, *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+/* PERF (2026-11-26) — kaydırma sürerken kaydırılan içerik hover almaz (ui.js `is-scrolling`):
+   kartların kalkma efekti ve ipucu balonu ağır joker SVG'lerini her karede yeniden çizdiriyordu. */
+.is-scrolling * { pointer-events: none !important; }
+
+/* ============================================================
+   P142 (kullanıcı 2026-11-27) — ÖZELLİKLİ TAŞ İŞARETİ
+   Görünümü değişmeyen ama özelliği olan taş (Anomali, Nöbetçi, Mıknatıs, Dokunaç
+   kilidi…) köşede tek bir küçük pırlanta taşır; ne yaptığı ipucunda yazar.
+   Emoji rozetleri kaldırıldı: asset alacak taşlar çizimleri gelene kadar yalnız
+   kendi kenar rengini taşır.
+   ============================================================ */
+.tile .tile-prop {
+  position: absolute; top: 4%; right: 6%; width: 16%; aspect-ratio: 1; pointer-events: none; z-index: 3;
+  background: #E8B530; transform: rotate(45deg); border-radius: 2px;
+  box-shadow: 0 0 0 2px #3A2A10, 0 2px 0 rgba(0, 0, 0, .35);
+}
+
+/* ============================================================
+   P142 — TÜCCAR TEKLİF PENCERESİ (pk-ov dili; bahis penceresinin kardeşi)
+   ============================================================ */
+#tuccarPop .offer-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+#tuccarPop .offer-opt { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 14px 14px 12px; text-align: left; cursor: pointer; min-height: 150px; }
+#tuccarPop .oo-cost { align-self: center; font: 700 30px/1 var(--gm-font); color: var(--gm-dark); letter-spacing: -1px; margin-bottom: 4px; }
+#tuccarPop .oo-row { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 3px solid color-mix(in srgb, var(--gm-dark) 18%, transparent); }
+#tuccarPop .oo-lbl { font: 700 11px/1 var(--gm-font); color: var(--gm-dark); opacity: .6; letter-spacing: .5px; text-transform: uppercase; }
+#tuccarPop .oo-text { font: 600 14px/1.35 var(--gm-font); color: var(--gm-dark); }
+#tuccarPop .oo-get .oo-text { font-weight: 700; }
+#tuccarPop.offer-boss .oo-get .oo-lbl { color: #C0392B; opacity: 1; }
+#tuccarPop.offer-boss .offer-opt.aimed { border-color: #E5484D; }
+#tuccarPop .offer-foot { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+#tuccarPop .offer-refuse { flex: 0 0 auto; min-width: 180px; }
+#tuccarPop.offer-boss .offer-warn { color: #FFB4A8; }
+@media (max-width: 700px) { #tuccarPop .offer-opts { grid-template-columns: 1fr; } }
+
+/* eski .offer-opt (yan yana hap düzeni) kuralları burada geçersiz: kart pk-ov dilinde, tam genişlik */
+#tuccarPop .offer-opt { width: auto; min-height: 150px; background: var(--gm-light); border: 4px solid var(--gm-edge); border-top-width: 7px; border-radius: 8px; }
+#tuccarPop .offer-opt:hover { transform: none; filter: brightness(1.06); box-shadow: 0 4px 0 rgba(0, 0, 0, .4); border-color: var(--gm-edge); }
+#tuccarPop .offer-opt .oo-cost { min-width: 0; padding: 0; background: none; border: 0; border-radius: 0; color: var(--gm-dark); font: 700 30px/1 var(--gm-font); }
+#tuccarPop .offer-opt .oo-text { font: 600 14px/1.35 var(--gm-font); }
+#tuccarPop.offer-boss .offer-opt.aimed { border-color: #E5484D; }
+#tuccarPop .offer-opt > .oo-row:first-child { border-top: 0; padding-top: 0; }
+#tuccarPop .offer-opt > .oo-row:only-child { margin: auto 0; }
+#tuccarPop .offer-opt > .oo-row:only-child .oo-text { font-size: 15px; font-weight: 700; text-align: center; }
+
+/* P142 (kullanıcı 2026-11-27: "discard zone'daki taşlar şeffaflaşınca güzel olmamış") — atılan taş yığını boşken
+   kesikli soluk yuva; taş varken yuva tam opak, taş kendi yüzüyle (saydamlık yok) */
+.gm-stage .discard-slot:has(.tile) { opacity: 1; border: 0 !important; }
+/* P142 (kullanıcı: "yazıyı laps diye koymuşuz gibi, bizim fontumuz değil") — teklif kartı tamamen oyunun piksel yazısıyla */
+#tuccarPop .offer-opt .oo-text { font: 700 15px/1.3 var(--gm-font); letter-spacing: -.5px; color: var(--gm-dark); }
+#tuccarPop .offer-opt .oo-get .oo-text { font-weight: 700; }
+#tuccarPop .offer-opt > .oo-row:only-child { align-self: stretch; text-align: center; }
+#tuccarPop .offer-opt > .oo-row:only-child .oo-text { font: 700 18px/1.35 var(--gm-font); letter-spacing: -.5px; }
+#tuccarPop .oo-lbl { font: 700 12px/1 var(--gm-font); letter-spacing: 0; }
+
+/* P142 (kullanıcı 2026-11-28: "hiçbir yerde emoji görmek istemiyorum") — emoji yerine çizilen öğeler */
+#pandoraOv .pd-lid i { position: absolute; left: -6px; right: -6px; top: 22px; height: 12px; background: #3A2414; }
+#pandoraOv .pd-lid i::after { content: ''; position: absolute; left: 50%; top: -6px; width: 18px; height: 22px; margin-left: -9px; background: #F2C14E; border: 3px solid #3A2414; box-sizing: border-box; }
+.rl-card .rl-sw { width: 56px; height: 56px; margin: 0 auto 6px; border: 3px solid var(--gm-dark); box-sizing: border-box; }
+.rl-card.rl-red .rl-sw { background: #E5484D; }
+.rl-card.rl-black .rl-sw { background: #1E1E24; }
+.gm-stage .map-skip-btn { font-size: 14px; letter-spacing: 0; }
+
+/* P142 (kullanıcı 2026-11-28: "discard'a taş gidince sayısı küçülüyor, orijinal asset kayıyor") — KÖK NEDEN: taş
+   şablonunun iç ölçüleri `--tw`ye bağlı, ama atık yuvası taşı 81px'e PİKSELLE büyütüp `--tw`yi 52px'te bırakıyordu;
+   eski `.discard-slot .tile .num { 24px }` kuralı da sayıyı küçültüyordu. Tepsi taşlarındaki çözümün aynısı:
+   bağlam başına `--tw`, yükseklik şablon oranından. Taş deste kadar canlı değil, hafif soluk (saydam değil). */
+.gm-stage .discard-slot .tile { --tw: 81px; width: var(--tw); height: calc(var(--tw) * 1.358); }
+.gm-stage .discard-slot .tile .num { font-size: calc(var(--tw) * .445); letter-spacing: calc(var(--tw) * -.055); }
+.gm-stage .discard-slot:has(.tile) .tile { filter: saturate(.7) brightness(.86); }
+.gm-stage .discard-slot.takeable .tile { filter: none; }
+
+/* P142 (kullanıcı 2026-11-28: "pop-up'lar metne göre esnememeli, alt satıra geçebilir") — Tüccar penceresi SABİT
+   ölçülü: kutu genişliği ve kart yüksekliği metinden bağımsız, uzun metin kart içinde alt satıra kırılır.
+   Bedel kutusu: üstte küçük etiket (VERİRSİN / BEDEL), altında büyük tutar. */
+#tuccarPop .pk-box { width: 720px; max-width: calc(100vw - 32px); box-sizing: border-box; }
+#tuccarPop .offer-opt { height: 176px; min-height: 0; overflow: hidden; justify-content: flex-start; }
+#tuccarPop .offer-opt .oo-text { overflow-wrap: anywhere; }
+#tuccarPop .offer-opt .oo-cost { display: flex; flex-direction: column; align-items: center; gap: 6px; align-self: stretch; margin-bottom: 2px; }
+#tuccarPop .offer-opt .oo-cost b { font: 700 30px/1 var(--gm-font); letter-spacing: -1px; }
+#tuccarPop .offer-opt .oo-cost + .oo-row { border-top: 3px solid color-mix(in srgb, var(--gm-dark) 18%, transparent); padding-top: 8px; }
+#tuccarPop .offer-foot { justify-content: center; flex-wrap: wrap; }
+#tuccarPop .offer-sub, #tuccarPop .offer-warn { overflow-wrap: anywhere; }
+
+/* P142 — Ayarlar'daki küçük açıklama yazıları da oyunun fontunda (Okey Pixel); eş genişlikli font sistem
+   fontundan geniş olduğu için harf arası sıkılaştırılır, kutular eski boyunda kalır (kaydırma çıkmaz) */
+#settingsOv .go-txt small { font-size: 11px; line-height: 1.3; letter-spacing: -.6px; }
+#settingsOv .st-since { font-size: 11px; letter-spacing: -.6px; white-space: nowrap; }
+#settingsOv .set-fw-grid .set-label { font-size: 11px; letter-spacing: -.5px; }
+
+/* P142 (kullanıcı 2026-11-28: "maskotu sola çek") — Stage/okey ilanında maskot 40px sola: Lady Luck kalbi balonun
+   arkasında kalmasın */
+#okeyBanner .mh-wrap .ep-msc { margin-right: 40px; }

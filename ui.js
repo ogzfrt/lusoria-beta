@@ -25,7 +25,7 @@
    'btnMapPause','btnMapInfo','mapMenuPop','btnMapGoMenu','btnMapSettings',
    'roundChip','coinChip','okeyChip','bossChip','turnIndicator','kahinChip',
    'scoreNow','scoreTarget','progressFill','permMult',
-   'jokerSlots','slotCount','backupSlots','backupCount','btnTerazi','btnParatoner','btnRusvet','fatalityChip','borsaChip',
+   'jokerSlots','slotCount','backupSlots','backupCount','btnTerazi','btnRusvet','fatalityChip','borsaChip',
    'consumCount','consumRow',
    'openAreaHint','combosRow','previewBar','crimsonPeek',
    'meldArea','meldRow','stageVal','roundVal',
@@ -205,7 +205,7 @@
     const s = Game.state;
     if (!s || s.status === 'lost' || s.status === 'runComplete') return;
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ where, data: Game.serialize() }));
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ ver: SAVE_VERSION, where, data: Game.serialize() }));
       betaHook('saved', { where });
     } catch (e) { /* depolama dolu vb. — kayıt sessizce atlanır */ }
   }
@@ -241,7 +241,7 @@
     if ((s.status !== 'playing' && !won) || curScreen() !== 'game') return;
     if (Game.needsBet && Game.needsBet()) return;
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ where: 'inRound', mid: true, data: Game.serialize() }));
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ ver: SAVE_VERSION, where: 'inRound', mid: true, data: Game.serialize() }));
     } catch (e) { /* depolama dolu vb. — kayıt sessizce atlanır */ }
   }
   function scheduleRoundSave() {
@@ -252,6 +252,8 @@
   function loadSave() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
+    /* P142 — eski sürümlü kayıt burada elenmez: Game.restore onu reddeder, resumeSaveNow uyumsuz kayıt
+       akışını çalıştırır (betada log + oyuncuya "oyun güncellendi" bildirimi, ardından yeni run) */
     try { return JSON.parse(raw); } catch (e) { return null; }
   }
   function clearSave() { localStorage.removeItem(SAVE_KEY); }
@@ -368,7 +370,8 @@
   /* ---------- Yardımcılar ---------- */
 
   /* Para birimi ikonu — CSS ile çizilen sikke */
-  const COIN = '<span class="coin-ico" aria-label="coin"></span>';
+  /* P142 (kullanıcı 2026-11-27) — coin'in çizimi/emojisi yok: her yerde "$" ile yazılır ($12) */
+  const COIN = '$';
 
   /* P127 (iPad geri bildirimi, kullanıcı 2026-11-13: "3 kademe") — YAZI BOYUTU. Ayarlar › Görünüm.
      Açıklama metinleri büyür: ipucu kutusu, öğretici balonu, ipucu pencereleri, bildirim. Kutu
@@ -381,7 +384,12 @@
     else document.documentElement.dataset.txt = String(txtSize);
   }
   applyTxtSize();
+  /* P142 (kullanıcı 2026-11-27: "şu tarz ekranda çıkan bildirgeler sakın bir daha çıkmasın") — bilgi /
+     onay bildirimleri (good) ekrana basılmaz; yalnız bir hamlenin NEDEN yapılamadığını söyleyen hata
+     satırları kalır. Bilginin kendisi ekranda zaten kendi yerinde görünür (rozet, kart, sayaç). */
+  const TOAST_INFO = false;
   function toast(msg, good = false) {
+    if (good && !TOAST_INFO) return;
     el.toast.textContent = T.ev(msg);
     el.toast.className = good ? 'good' : '';
     clearTimeout(toastTimer);
@@ -794,13 +802,16 @@
       if (f && dr && dr.width) {
         const elapsed = now - f.t0;
         if (elapsed >= f.delay + f.dur) continue;
+        /* P142 (kullanıcı 2026-11-27: "taş eklenirken boş yuvalar kayıyormuş gibi") — eski CSS tileDraw
+           kayması ÖLÇÜMDEN ÖNCE kapatılır: yoksa taşın yeri o kaymanın ortasında (sağa-yukarı, yarım boy)
+           ölçülüyor, altına konan boş yuva yer tutucusu da yanlış hücreye çiziliyordu. */
+        d.style.animation = 'none';
         const tr = d.getBoundingClientRect();
         if (!tr.width) continue;
         const k = tr.width / d.offsetWidth;   // gm-stage ölçeği: ekran pikseli → tasarım pikseli
         const dx = (dr.left + dr.width / 2 - (tr.left + tr.width / 2)) / k;
         const dy = (dr.top + dr.height / 2 - (tr.top + tr.height / 2)) / k;
         const s0 = dr.width / tr.width;       // destedeki taş ıstakadakinden büyük olabilir
-        d.style.animation = 'none';           // eski CSS tileDraw kayması devre dışı
         const back = document.createElement('i');
         back.className = 'tile-back-fx';
         d.appendChild(back);
@@ -1265,7 +1276,7 @@
     f.animate([{ opacity: strength }, { opacity: 0 }], { duration: 220 * fxK(), easing: 'ease-out' }).onfinish = () => f.remove();
   }
   /* sahnede bir öğenin üstünden yükselen kısa yazı (ör. "+12") */
-  function popText(target, text, cls = '') {
+  function popText(target, text, cls = '', life = 720) {
     const stage = target && target.closest('.gm-stage');
     if (!stage || fxOff()) return;
     const sr = stage.getBoundingClientRect(), sc = (sr.width / (stage.offsetWidth || sr.width)) || 1, r = target.getBoundingClientRect();
@@ -1276,7 +1287,7 @@
     p.style.top = ((r.top - sr.top) / sc - 6) + 'px';
     stage.appendChild(p);
     p.animate([{ transform: 'translate(-50%, 0) scale(.6)', opacity: 0 }, { transform: 'translate(-50%, -18px) scale(1.15)', opacity: 1, offset: .3 },
-      { transform: 'translate(-50%, -34px) scale(1)', opacity: 0 }], { duration: 720 * fxK(), easing: 'ease-out' }).onfinish = () => p.remove();
+      { transform: 'translate(-50%, -34px) scale(1)', opacity: 0 }], { duration: life * fxK(), easing: 'ease-out' }).onfinish = () => p.remove();
   }
   /* piksel kıvılcım patlaması (sahne koordinatında bir öğenin çevresinde) */
   function sparkBurst(target, n = 14, colors = ['#FFE58A', '#FFFFFF', 'var(--gm-turn-on)']) {
@@ -1531,6 +1542,17 @@
   function rackFall() {
     if (fxOff()) return;
     const ts = [...el.rack.querySelectorAll('.tile[data-id]:not(.xf-old)')];
+    /* P142 (kullanıcı 2026-11-27: "taşlar düşüyor ama yuvaları boş kalıyor") — düşen her taşın altına boş yuva
+       konur: ıstaka, taşlar gidince de diğer boş hücrelerle aynı görünür (dağıtım yer tutucusuyla aynı kalıp) */
+    ts.forEach((d) => {
+      const row = d.parentNode, rw = row.getBoundingClientRect(), tr = d.getBoundingClientRect();
+      if (!tr.width) return;
+      const k = tr.width / d.offsetWidth;
+      const ph = document.createElement('div');
+      ph.className = 'rack-empty deal-ph';
+      Object.assign(ph.style, { left: (tr.left - rw.left) / k + 'px', top: (tr.top - rw.top) / k + 'px' });
+      row.insertBefore(ph, row.firstChild);
+    });
     ts.forEach((d) => {
       const rot = (Math.random() - .5) * 80, dx = (Math.random() - .5) * 60;
       d.animate([{ transform: 'none' }, { transform: `translate(${dx * .2}px, -18px) rotate(${rot * .1}deg)`, offset: .18 },
@@ -1822,8 +1844,11 @@
          bu taşın üstünde METİN YOKTUR, kimliği yalnız sembolde (mor kontur
          + içi boş mühür) durur. Açıklama tooltip'te kalmaya devam eder. */
       d.innerHTML = `<div class="num">${tile.number}</div><div class="dot"></div>`;
-      attachTip(d, { name: t('fakeOkeyName'), rarityText: t('fakeOkeyTag'),
-        desc: t('fakeOkeyDesc', okeyLabel()) }, {});
+      /* Zombie sahte okeye de bulaşır (kullanıcı 2026-11-28) — enfekte sahte okey diğer enfekte taşlarla aynı işareti alır */
+      if (tile.infected) d.classList.add('bm-zinf');
+      attachTip(d, tile.infected
+        ? { name: t('zombieTileName'), rarityText: t('bossMarkTag'), desc: t('zombieTileDesc') }
+        : { name: t('fakeOkeyName'), rarityText: t('fakeOkeyTag'), desc: t('fakeOkeyDesc', okeyLabel()) }, {});
       if (interactive) {
         if (selection.has(tile.id)) d.classList.add('selected');
         if (newTileIds.has(tile.id)) d.classList.add('new');
@@ -1850,8 +1875,6 @@
     if (tile.bungie) d.classList.add('bungie-back');   // Grup Q: sakızdan geri dönen taş
     // P29 · Grup B — Hayalet jokerinin bir turluk taşı
     if (tile.ghost) d.classList.add('ghost-tile');
-    // P29 · Grup F — Paratoner'ın bu turki yem taşı
-    if (Game.state && Game.state.paratonerBait === tile.id) d.classList.add('bait-tile');
     d.dataset.id = tile.id;
     d.innerHTML = `<div class="num">${tile.number}</div><div class="dot"></div>`;
     /* PLAYTEST 14 · GRUP C — sürekli efekt veren jokerlerin (Hipnotizör,
@@ -1859,8 +1882,7 @@
        çerçeve + o çerçeve boyunca dönen bir ışık. Eski dışa taşan glow
        kaldırıldı; çerçeve `.tile-fx`, dönen ışık içindeki `<i>`. */
     if (tile.bungie) d.appendChild(fxOrbit('bungie'));
-    if (tile.ghost) d.appendChild(fxOrbit('ghost'));
-    if (Game.state && Game.state.paratonerBait === tile.id) d.appendChild(fxOrbit('bait'));
+    /* P142 (kullanıcı 2026-11-27) — Üç Kağıtçı'nın okey kopyası düz okey gibi görünür: hayalet hâle/ışık yok */
     /* Freedom Fighters işareti — P52 · GRUP A (kullanıcı kararı 2026-09-18:
        "Figma'dakinin birebir aynısı olsun, senin yaptığın olmasın").
        ⚔ KOKARDI KALDIRILDI: tasarımda (346:2466) taşın üstünde rozet yoktur ve
@@ -1889,26 +1911,19 @@
        diker, discard'ı engeller, açılımda +0.6x verirdi — ama oyuncu hangi
        taşın dikili olduğunu göremediği için joker tamamen işlevsiz
        görünüyordu (Zombie'nin Playtest 10'daki hikâyesinin aynısı). */
-    const bossMark = tile.bossSewn ? { c: 'bsewn', i: '🪡', k: 'bossSewn' }
-      : tile.sewn ? { c: 'jsewn', i: '🪡', k: 'sewnTile' }   // JOKER dikişi (ödül)
-      : tile.bossInfected ? { c: 'binf', i: '🧟', k: 'bossInfected' }
-      : tile.infected ? { c: 'zinf', i: '🧟', k: 'zombieTile' }   // JOKER enfeksiyonu (ödül)
+    const bossMark = tile.bossSewn ? { c: 'bsewn', k: 'bossSewn' }
+      : tile.sewn ? { c: 'jsewn', k: 'sewnTile' }   // JOKER dikişi (ödül)
+      : tile.bossInfected ? { c: 'binf', k: 'bossInfected' }
+      : tile.infected ? { c: 'zinf', k: 'zombieTile' }   // JOKER enfeksiyonu (ödül)
       : tile.glitch ? (tile.glitchGift
-          ? { c: 'bglitchgift', i: '🌀', k: 'jokerGlitch' }   // Grup N: JOKER glitch'i (ödül)
-          : { c: 'bglitch', i: '⚠', k: 'bossGlitch' })       // Grup N: BOSS glitch'i (ceza)
-      : tile.ffMarkedTile ? { c: 'bff', i: '⚔', k: 'bossFf' } : null;
+          ? { c: 'bglitchgift', k: 'jokerGlitch' }   // Grup N: JOKER glitch'i (ödül)
+          : { c: 'bglitch', k: 'bossGlitch' })       // Grup N: BOSS glitch'i (ceza)
+      : tile.ffMarkedTile ? { c: 'bff', k: 'bossFf' } : null;
     if (bossMark) {
       d.classList.add('bm-' + bossMark.c);
       if (bossMark.c === 'bff' && tile.ffUsedInMeld) d.classList.add('bm-done');
-      /* P52 · Grup A: Freedom Fighters BOSS varyantı da Figma dönüşüm assetini
-         kullanıyor; onda da rozet çizilmez (bkz. yukarıdaki joker notu).
-         Diğer boss işaretleri rozetlerini aynen korur. */
-      if (bossMark.c !== 'bff') {
-        const b = document.createElement('span');
-        b.className = 'tile-mark boss';
-        b.textContent = bossMark.i;
-        d.appendChild(b);
-      }
+      /* P142 (kullanıcı 2026-11-27: "o ikon muhabbetinden tamamen kurtulmalıyız") — taş köşesinde emoji rozeti
+         yok. Bu taşların görünümü Figma çizimleriyle gelecek; o güne kadar yalnız kendi kenar rengi. */
       attachTip(d, { name: t(bossMark.k + 'Name'), rarityText: t('bossMarkTag'),
         desc: t(bossMark.k + 'Desc') }, {});
     }
@@ -1928,14 +1943,13 @@
        üstüne mavi kesikli kontur + ⧉ basılıyor, taş normal okey gibi
        görünmüyordu. Okey her stage o stage'in okeyi olur; kökeni önemsizdir. */
     const srcMark = Game.isOkeyTile(tile) ? null
-      : tile.stolen ? { c: 'stolen', i: '🕶', k: 'stolenTile' }
-      : tile.alien ? { c: 'alien', i: '👽', k: 'alienTile' }
-      : tile.copied ? { c: 'copied', i: '⧉', k: 'copiedTile' }
-      : tile.plague ? { c: 'plague', i: '🦠', k: 'plagueTile' }
-      : (tile.gift && !tile.special) ? { c: 'gift', i: '🎁', k: 'giftTile' }   // P121: Armağan taşı artık Altın Taş çizimiyle
-      : tile.revived ? { c: 'revived', i: '⚡', k: 'revivedTile' }
-      : tile.stitched ? { c: 'stitched', i: '🧬', k: 'stitchedTile' }
-      : tile.modded ? { c: 'modded', i: '✎', k: 'moddedTile' }
+      : tile.alien ? { c: 'alien', k: 'alienTile' }
+      : tile.copied ? { c: 'copied', k: 'copiedTile' }
+      : tile.plague ? { c: 'plague', k: 'plagueTile' }
+      : (tile.gift && !tile.special) ? { c: 'gift', k: 'giftTile' }   // P121: Armağan taşı artık Altın Taş çizimiyle
+      : tile.revived ? { c: 'revived', k: 'revivedTile' }
+      : tile.stitched ? { c: 'stitched', k: 'stitchedTile' }
+      : tile.modded ? { c: 'modded', k: 'moddedTile' }
       /* PLAYTEST 18 · GRUP B — DEĞERİ SONRADAN DEĞİŞEN TAŞ ARTIK GÖRÜNÜR.
          Kullanıcı raporu: "elime 3 tane Mavi 13 geldi, hiçbir kopya jokeri
          yoktu". Motor tarafında bu MEŞRUYDU — Adem ile Havva (+2), Kağıt
@@ -1947,47 +1961,42 @@
          sanıyordu. Artık 🔁 rozeti taşır ve tooltip hangi jokerin yaptığını
          yazar. Daha özel bir köken rozeti varsa (gift/stitched/modded…) o
          kazanır — bu yalnızca "başka türlü işaretsiz kalan" dönüşümlerdir. */
-      : tile.retuned ? { c: 'retuned', i: '🔁', k: 'retunedTile' } : null;
+      : tile.retuned ? { c: 'retuned', k: 'retunedTile' } : null;
     if (tile.origin) d.dataset.origin = tile.origin;   // P120 — dönüşüm animasyonu kaynağı (sıçrayacak joker)
     if (srcMark) {
-      d.classList.add('src-' + srcMark.c);
-      const b = document.createElement('span');
-      b.className = 'tile-mark src';
-      b.textContent = srcMark.i;
-      d.appendChild(b);
+      d.classList.add('src-' + srcMark.c);   // P142 — köşe rozeti yok (bkz. bossMark notu)
       attachTip(d, { name: t(srcMark.k + 'Name'), rarityText: t('extraTileTag'),
         desc: srcMark.c === 'retuned'
           ? t('retunedTileDesc', T.originName(tile.origin))
           : t(srcMark.k + 'Desc') }, {});
     }
     /* LANETLİ BOYUT — Parti 2 taş işaretleri */
-    const cMark = (cls, ico, name, desc) => {
-      d.classList.add(cls);
+    /* P142 — görünümü değişmeyen ama ÖZELLİĞİ olan taşlar ortak işareti taşır (köşede küçük pırlanta);
+       üstüne gelince ne yaptığı yazar. Emoji kullanılmaz. */
+    const propMark = () => {
+      if (d.querySelector('.tile-prop')) return;
       const m = document.createElement('span');
-      m.className = 'tile-mark cmark';
-      m.textContent = ico;
+      m.className = 'tile-prop';
       d.appendChild(m);
+    };
+    const cMark = (cls, name, desc, prop) => {
+      d.classList.add(cls);
+      if (prop) propMark();
       attachTip(d, { name, rarityText: t('cursedTag'), desc }, {});
     };
     if (tile.cocukLock) {   // LANETLİ ÇOCUK — Faz 2: dokunaç sarar (açılmaz, atılmaz)
       d.classList.add('cocuk-lock');
-      const v = document.createElement('span');
-      v.className = 'cl-vine';
-      d.appendChild(v);
+      propMark();
       attachTip(d, { name: t('cocukLockName'), rarityText: t('bossMarkTag'), desc: t('cocukLockDesc', Math.max(1, tile.cocukLock - Game.state.turn + 1)) }, {});
     }
-    if (tile.fossil) cMark('fossil-tile', '🦴', t('fossilName'), t('fossilDesc', Game.state.fossil ? Game.state.fossil.age : 1));
-    else if (tile.kabus) cMark('kabus-tile', '👁', t('kabusName'), t('kabusDesc'));
-    else if (tile.anomAlt != null) cMark('anom-tile', '👾', t('anomName'), t('anomDesc', tile.number, tile.anomAlt));
-    else if (Game.isSentinel && Game.isSentinel(tile)) cMark('sentinel-tile', '🗿', t('sentName'), t('sentDesc'));
+    if (tile.fossil) cMark('fossil-tile', t('fossilName'), t('fossilDesc', Game.state.fossil ? Game.state.fossil.age : 1));
+    else if (tile.kabus) cMark('kabus-tile', t('kabusName'), t('kabusDesc'));
+    else if (tile.anomAlt != null) cMark('anom-tile', t('anomName'), t('anomDesc', tile.number, tile.anomAlt), true);
+    else if (Game.isSentinel && Game.isSentinel(tile)) cMark('sentinel-tile', t('sentName'), t('sentDesc'), true);
     /* LANETLİ BOYUT — Çürük Taş: aşamaya göre aura + köşede küf işareti; ipucu ne olacağını söyler (sayı yok) */
     const rotSt = Game.rotStage ? Game.rotStage(tile) : 0;
     if (rotSt) {
       d.classList.add('rot', 'rot-' + rotSt);
-      const m = document.createElement('span');
-      m.className = 'tile-mark rotm';
-      m.innerHTML = pixIcon('rot' + rotSt, 3);
-      d.appendChild(m);
       attachTip(d, { name: t('rotName' + rotSt), rarityText: t('rotTag'), desc: t('rotDesc' + rotSt) }, {});
     }
     /* MIKNATIS (P28 · Grup H) — mıknatıslı taş ıstakada işaretlenir.
@@ -1998,6 +2007,7 @@
        icat edilmez. */
     if (tile.magnet && !tile.jokerTile) {
       d.classList.add('magnet');
+      propMark();
       attachTip(d, { name: t('magnetName'), rarityText: t('magnetTag'),
         desc: t('magnetDesc') }, {});
     }
@@ -2245,7 +2255,7 @@
         const sk = document.createElement('button');
         sk.type = 'button';
         sk.className = 'map-skip-btn sk-' + ric;
-        sk.textContent = '⏭';
+        sk.textContent = t('skipBtn');
         sk.title = t('trSkipRoundTip', ric);
         sk.disabled = !active;
         sk.addEventListener('click', () => {
@@ -2686,7 +2696,7 @@
     const fzCard = j.id != null && (j.fused || []).length > 0;
     const fzRow = (f) => {
       const c = liveCorp(f);
-      return `<div class="tip-fused"><div class="tip-head">⚗ ${c ? T.ev(c.name) : T.name(f)}</div>` +
+      return `<div class="tip-fused"><div class="tip-head">${c ? T.ev(c.name) : T.name(f)}</div>` +
         `<div class="tip-desc">${emphNums(c ? t('corpTipDesc', T.ev(c.text), T.ev(c.rewardText), T.ev(c.penaltyText)) : T.desc(f), f.key)}</div></div>`;
     };
     const fusedLines = (fzCard ? [j, ...j.fused] : (j.fused || [])).map(fzRow).join('');
@@ -2698,9 +2708,9 @@
     const legacyLines = !heirRec ? ''
       : ((heirRec.legacy || []).length
         ? heirRec.legacy.map((r, i) =>
-          `<div class="tip-fused tip-legacy"><div class="tip-head">📜 ${t('tipLegacyItem', i + 1, vcap)} ${T.name(r)}</div>` +
+          `<div class="tip-fused tip-legacy"><div class="tip-head">${t('tipLegacyItem', i + 1, vcap)} ${T.name(r)}</div>` +
           `<div class="tip-desc">${emphNums(T.desc(r), r.key)}</div></div>`).join('')
-        : `<div class="tip-fused tip-legacy"><div class="tip-head">📜 ${t('tipLegacyEmpty')}</div></div>`);
+        : `<div class="tip-fused tip-legacy"><div class="tip-head">${t('tipLegacyEmpty')}</div></div>`);
     /* P98 — varyantlar koleksiyonda kendi penceresinde (showVariants);
        ipucu yalnız tıklanabildiğini söyler. */
     const variantLines = j.varHint ? `<div class="tip-var-hint">${t('varTip', j.varHint)}</div>` : '';
@@ -2729,7 +2739,7 @@
     tip.innerHTML =
       `<div class="tip-in">` +
       (fzCard
-        ? `<div class="tip-head">⚗ ${T.name(fzDef)}</div>`
+        ? `<div class="tip-head">${T.name(fzDef)}</div>`
         /* denetim3 #49 (kullanıcı: "nadirlik sınıfı başlıkta, sağda belirgin yazsın") — nadirlik etiketi başlık şeridinin
            SAĞINDA koyu plaka; ayrı satır kalktı (deste jokeri notu etiketin içinde) */
         : `<div class="tip-head th-flex"><span class="th-name">${headTxt}</span>${rarityLine ? `<span class="th-rar">${rarityLine.replace(/<\/?div[^>]*>/g, '')}</span>` : ''}</div>` +
@@ -2926,6 +2936,27 @@
     hideActBadge();
   }
 
+  /* PERF (2026-11-26, kullanıcı: "yukarı aşağı kaydırırken kasıyor") — kaydırma sürerken imleç
+     kartların üstünden geçer: her kart hover'da kalkar (transform) ve ipucu balonu açılır; bu da
+     ağır piksel-art joker SVG'lerini her karede yeniden çizdiriyordu (Trainer kurulumu, koleksiyon).
+     Kaydırma süresince KAYAN ÖĞE `is-scrolling` sınıfını taşır → içindekiler hover almaz
+     (style.css; kaydırıcının kendisi olay almaya devam eder, tekerlek kopmaz), açık ipucu kapanır.
+     Son kaydırmadan 150 ms sonra her şey normale döner. */
+  let scrollIdle = 0, scrollEl = null;
+  const onAnyScroll = (e) => {
+    const tg = e.target;
+    if (!(tg instanceof Element)) return;   // sayfanın kendisi kaymaz; yalnız iç kaydırıcılar
+    if (scrollEl !== tg) {
+      if (scrollEl) scrollEl.classList.remove('is-scrolling');
+      scrollEl = tg;
+      tg.classList.add('is-scrolling');
+      hideTip();
+    }
+    clearTimeout(scrollIdle);
+    scrollIdle = setTimeout(() => { if (scrollEl) scrollEl.classList.remove('is-scrolling'); scrollEl = null; }, 150);
+  };
+  document.addEventListener('scroll', onAnyScroll, { capture: true, passive: true });
+
   function attachTip(elm, j, opts = {}) {
     elm.addEventListener('mouseenter', () => showTip(elm, j, opts));
     elm.addEventListener('mouseleave', () => {
@@ -3118,7 +3149,7 @@
     const res = Game.toggleJar();
     if (!res.ok) { toast(T.ev(res.error)); return; }
     const st = Game.jarState();
-    toast(res.armed ? t('jarArmed', st ? st.coins : 0) : t('jarUnarmed'), res.armed);
+    toast(res.armed ? t('jarArmed', st ? st.coins : 0) : t('jarUnarmed'), true);
     if (res.armed) SFX.crack();
     render();
   }
@@ -3126,7 +3157,7 @@
   function useDamga() {
     const res = Game.toggleDamga();
     if (!res.ok) { toast(res.error); return; }
-    toast(res.armed ? t('damgaArmed') : t('damgaDisarmed'), res.armed);
+    toast(res.armed ? t('damgaArmed') : t('damgaDisarmed'), true);
     render();
   }
 
@@ -3203,8 +3234,6 @@
       const jr = has('rusvet') && Game.jarState && Game.jarState();   // P100 — kavanozu kır / geri koy
       if (jr && jr.id === j.id && (jr.canUse || jr.armed)) add('rusvet', t(jr.armed ? 'abUndo' : 'abUse'), useJar);
       if (has('terazi') && Game.canTeraziSacrifice && Game.canTeraziSacrifice()) add('terazi', t('abUse'), doTerazi);
-      if (has('paratoner') && Game.canParatonerBait && Game.canParatonerBait())
-        add('paratoner', t(s.paratonerBait != null ? 'abUndo' : 'abUse'), doParatoner);
       if (has('hileliZar') && Game.canZarCheat && Game.canZarCheat()) add('hileliZar', t('zarCheatBtn'), showZarCheat);   // kullanıcı 2026-10-25 — hile karttan
       /* LANETLİ BOYUT — Parti 2: karta sol tıkla kullanılan lanetli jokerler */
       const cursedDo = (res) => { if (!res || !res.ok) { if (res && res.error) toast(res.error, false); return; } render(); };
@@ -3281,7 +3310,7 @@
       + (u.drop
         ? `<div class="up-dropbox${canTake ? ' ready' : ''}"><div class="up-dheadrow"><b class="up-dhead">${t('orionDropHead')}</b>${hand}</div>`
           + `<div class="up-drow"><div class="up-dtile"></div><small class="up-dcost">${canTake ? t('orionTakeCost') : t('orionTakeLater')}</small>`
-          + (canTake ? `<button class="up-take">⬇ ${t('orionTake')}</button>` : '') + `</div></div>`
+          + (canTake ? `<button class="up-take">${t('orionTake')}</button>` : '') + `</div></div>`
         : `<div class="up-dropbox empty"><small>${t('orionNoDrop')}</small>${hand}</div>`);
     if (u.drop) {
       const d = u.drop;
@@ -3311,9 +3340,9 @@
     const ladder = `<div class="bt-ladder"><span class="bt-st"><b>★</b> ×${BELT_K[1]}</span><i>${t('beltAfter', BELT_TWO_AT)}</i>`
       + `<span class="bt-st"><b>★★</b> ×${BELT_K[2]}</span><i>${t('beltAfter', BELT_FULL_AT)}</i>`
       + `<span class="bt-st bt-top"><b>★★★</b> ×${BELT_K[3]}</span></div>`;
-    ov.innerHTML = `<div class="pk-box"><div class="pk-title">🎩 ${t('beltTitle')}</div>`
+    ov.innerHTML = `<div class="pk-box"><div class="pk-title">${t('beltTitle')}</div>`
       + `<div class="pk-sub-title">${ladder}<div class="bt-rule">${t('beltRule1')}</div><div class="bt-rule">${t('beltRule2')}</div></div>`
-      + (locked ? `<div class="belt-lock-note">🔒 ${t('beltLockedNote')}</div>` : '')
+      + (locked ? `<div class="belt-lock-note">${t('beltLockedNote')}</div>` : '')
       + `<div class="pk-body pk-choice"></div>`
       + `<div class="pk-foot"><button class="btn ghost belt-close">${t('beltLater')}</button></div></div>`;
     const body = ov.querySelector('.pk-body');
@@ -3450,7 +3479,7 @@
     const lost = f.lost ? `<div class="fd-lost"><span class="fd-ico">${f.lost.icon || (f.lost.kind === 'joker' ? '🃏' : '🪄')}</span>`
       + `<span class="fd-name">${f.lost.kind === 'consum' ? T.consumName(f.lost.key, f.lost.name) : f.lost.kind === 'joker' ? T.name({ key: f.lost.key, name: f.lost.name }) : f.lost.name}</span>`
       + `<span class="fd-broke">${t('fedaBroke')}</span></div>` : '';
-    ov.innerHTML = `<div class="pk-box"><div class="pk-title">🧸 ${t('fedaTitle')}</div>`
+    ov.innerHTML = `<div class="pk-box"><div class="pk-title">${t('fedaTitle')}</div>`
       + `<div class="pk-sub-title">${t('fedaSub')}</div>${lost}`
       + `<div class="fd-target"><span>${t('fedaTarget')}</span><b class="fd-old">${f.old}</b><b class="fd-arrow">→</b><b class="fd-new">${f.target}</b></div>`
       + (f.extra ? `<div class="fd-extra">${t('fedaExtra')}</div>` : '')
@@ -3531,7 +3560,7 @@
     ov.innerHTML =
       `<div class="pk-box">` +
       /* P105 (kullanıcı raporu): füzyon kartında başlık ana jokerin adını (Godzilla) yazıyordu → Füzyon */
-      `<div class="pk-title">⚗ ${(j.fused || []).length ? T.name({ key: 'fuzyon', name: 'Füzyon' }) : T.name(j)}</div>` +
+      `<div class="pk-title">${(j.fused || []).length ? T.name({ key: 'fuzyon', name: 'Füzyon' }) : T.name(j)}</div>` +
       `<div class="pk-sub-title">${t('useChooseBody')}</div>` +
       `<div class="pk-body pk-choice"></div>` +
       `<div class="pk-foot"><button class="btn ghost" id="ucCancel">${t('backBtn')}</button></div></div>`;
@@ -3588,6 +3617,8 @@
     /* denetim — Avukat: bu tur susturulan joker (Game._mutedKey) sönük + kartın içinde plaka; backup'taki kart değil */
     const avMute = !opts.backup && Game._mutedKey && Game._mutedKey();
     if (avMute && (j.key === avMute || (j.fused || []).some((f) => f.key === avMute))) tile2.classList.add('av-muted');
+    /* Lanetli Boyut · Sessiz raund cezası: bu raund susan lanetli eşya da aynı sönük görünümü alır */
+    if (!opts.backup && gs && gs.silencedJoker === j.id && gs.status === 'playing') tile2.classList.add('av-muted');
     /* P90 — finalde Orion'un kemerine taktığı joker (bu raund ona çalışır) */
     if (gs && gs.orionBeltId === j.id && Game._raceOn && Game._raceOn()) tile2.classList.add('orion-belted');
     if (!jokerSeen.has(j.id)) { jokerSeen.add(j.id); tile2.classList.add('jt-enter'); }
@@ -3631,14 +3662,14 @@
     tile2.innerHTML =
       (hasArt
         ? '<div class="jt-art"></div>'
-        : `<div class="jt-name">${(Game._noSellCard(j) ? '🔒 ' : '')}${fzCard ? '⚗ ' + T.name({ key: 'fuzyon', name: 'Füzyon' }) : T.name(j)}</div>`) +
+        : `<div class="jt-name">${''}${fzCard ? '' + T.name({ key: 'fuzyon', name: 'Füzyon' }) : T.name(j)}</div>`) +
       `<span class="jt-uses${opts.backup ? ' frozen' : (!runLong && j.usesLeft <= 1 ? ' danger' : '')}">` +
       (opts.backup ? '❄' : (runLong ? '∞' : j.usesLeft)) + `</span>`;
     /* P71 — 💋/⭐ rozeti gerçek öğe (::after legendary parıltısıyla çakışırdı) */
     if (tile2.classList.contains('ll-charm') || tile2.classList.contains('ll-star')) {
       const lb = document.createElement('span');
       lb.className = 'll-badge';
-      lb.textContent = tile2.classList.contains('ll-charm') ? '💋' : '⭐';
+      lb.textContent = tile2.classList.contains('ll-charm') ? '' : '★';
       tile2.appendChild(lb);
     }
     /* kullanıcı 2026-10-29: susturulan joker yalnız SOLAR (renk gider) — üstüne plaka/emoji konmaz */
@@ -3647,7 +3678,7 @@
       const lv = Game.state.godzillaLevel || 0;
       const b = document.createElement('span');
       b.className = 'jt-charge' + (lv > 0 ? ' on' : '');
-      b.textContent = lv >= 3 ? '⚡S3★' : (lv > 0 ? `⚡S${lv}` : 'S0');
+      b.textContent = lv >= 3 ? 'S3★' : `S${lv}`;
       b.title = lv > 0 ? t('godzillaOn', lv) : t('godzillaOff');
       tile2.appendChild(b);
     }
@@ -3657,14 +3688,7 @@
        sayı yalnız raund başı bildiriminde bir kez geçiyordu ve o bildirim
        okunmadan kayboluyordu (aynı listenin A/3 maddesi). Godzilla şarj
        rozetiyle aynı kalıp kullanılır — yeni bir UI dili icat edilmez. */
-    if (!opts.backup && Game.state.hipnoNumber
-        && (j.key === 'hipnotizor' || (j.fused || []).some(f => f.key === 'hipnotizor'))) {
-      const b = document.createElement('span');
-      b.className = 'jt-charge on';
-      b.textContent = `🌀${Game.state.hipnoNumber}`;
-      b.title = t('hipnoBadge', Game.state.hipnoNumber);
-      tile2.appendChild(b);
-    }
+    /* P142 (kullanıcı 2026-11-27) — trans sayısı kartta gösterilmez: hipnoz taşları kendi görünümleriyle tanınır */
     /* P48 — SISYPHUS KAYASI KARTTA: kaya raundlar arası taşındığı için oyuncu
        yüksekliğini görmeli (Godzilla şarj rozetiyle aynı kalıp). Sayı = üst üste
        açılımlı tur; sıradaki açılım o basamağın çarpanını alır. */
@@ -3672,7 +3696,7 @@
       const v = Game.state.sisyphusRock || 0;   // P100 — rozet kayanın yüksekliğini (çarpan) yazar
       const b = document.createElement('span');
       b.className = 'jt-charge' + (v > 0 ? ' on' : '');
-      b.textContent = `🪨${v}`;
+      b.textContent = `${v.toFixed(1)}x`;
       b.title = v > 0 ? t('sisyphusBadge', v.toFixed(1)) : t('sisyphusBadgeZero');
       tile2.appendChild(b);
     }
@@ -3684,7 +3708,7 @@
         const n = jr.jarCoins || 0;
         const b = document.createElement('span');
         b.className = 'jt-charge' + (Game.state.jarArmed ? ' on' : '');
-        b.textContent = `🫙${n}`;
+        b.textContent = `$${n}`;
         b.title = t('jarBadge', n);
         tile2.appendChild(b);
       }
@@ -3699,7 +3723,7 @@
         const leg = heir.legacy || [];
         const b = document.createElement('span');
         b.className = 'jt-charge' + (leg.length ? ' on' : '');
-        b.textContent = `📜${leg.length}/${window.VASIYET_CAP || 2}`;
+        b.textContent = `${leg.length}/${window.VASIYET_CAP || 2}`;
         b.title = leg.length ? t('vasiyetBadge', leg.map(r => T.name(r)).join(' · '))
           : t('vasiyetBadgeEmpty');
         tile2.appendChild(b);
@@ -3721,7 +3745,7 @@
       const b = document.createElement('span');
       b.className = 'jt-charge' + (n ? ' on' : '');
       if (j.key === 'otekiDunya') tile2.classList.toggle('oteki-flip', !!(o && o.dolunay));
-      b.textContent = `${o ? o.moon : '🌙'}${n}`;
+      b.textContent = `${n}`;   // P142 — emoji yok, yalnız sayı
       b.title = o ? t('tipNowWell', n, o.max, o.moon) : '';
       tile2.appendChild(b);
     }
@@ -3921,6 +3945,27 @@
       o.stop(actx.currentTime + when + dur + 0.02);
     } catch (e) { /* ses desteklenmiyorsa sessiz devam */ }
   }
+  /* PERF (2026-11-26, kullanıcı: "ilk tıklayışımda takılarak açılıyor") — ses sistemi
+     (AudioContext) eskiden İLK TIKLAMANIN içinde kuruluyordu; Windows'ta ses aygıtını açmak
+     ana iş parçacığını ~50-170 ms kilitliyor ve ilk açılan pencere takılıyordu. Artık sayfa
+     yüklenince boşta kurulur. Normal tarayıcıda kullanıcı etkileşimi olmadan "suspended"
+     doğar → ilk basışta resume() edilir (eşzamansız, takılma yok). Masaüstü exe zaten
+     --autoplay-policy=no-user-gesture-required ile açılır. */
+  const warmAudio = () => {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { /* ses yok */ } }
+  };
+  (window.requestIdleCallback || ((f) => setTimeout(f, 300)))(warmAudio, { timeout: 2000 });
+  const resumeAudio = () => {
+    warmAudio();
+    if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
+    if (actx && actx.state === 'running') {
+      document.removeEventListener('pointerdown', resumeAudio, true);
+      document.removeEventListener('keydown', resumeAudio, true);
+    }
+  };
+  document.addEventListener('pointerdown', resumeAudio, true);
+  document.addEventListener('keydown', resumeAudio, true);
+
   /* denetim S-4 — bu tıklamanın genel düğme sesini sustur (eylem kendi sesini SONRA çalacaksa) */
   function muteUiClick() { lastSfxAt = performance.now(); }
 
@@ -4940,17 +4985,17 @@
      Eski hâlde hem joker hem boss etkileri sıradan not kartı olarak, tur
      başındaki 5-6 satırın arasında akıp gidiyordu — kullanıcı "hiçbir
      hissedilir etki fark etmedim" dedi. Artık her hile olayı ekranın
-     ortasında kendi kartıyla duyurulur; motor olayı `state.cheatFlash`e
+     ortasında kendi kartıyla duyurulur; motor olayı `state.stealFlash`e
      bırakır, burada tüketilir (bir olay yalnız BİR kez gösterilir).
      ============================================================ */
-  function cheatFlash() {
+  function stealFlash() {
     const s = Game.state;
-    const queue = (s && Array.isArray(s.cheatFlash)) ? s.cheatFlash : [];
+    const queue = (s && Array.isArray(s.stealFlash)) ? s.stealFlash : [];
     if (!queue.length) return;
-    s.cheatFlash = [];                         // tüketildi
+    s.stealFlash = [];                         // tüketildi
     /* Aynı anda birden fazla olay birikmişse üst üste binmesin diye
        sırayla, aralıklı gösterilir. */
-    queue.forEach((f, i) => setTimeout(() => showCheatFlash(f), i * 900));
+    queue.forEach((f, i) => setTimeout(() => ladyStealAnim(f), i * 900));
   }
 
   /* kullanıcı 2026-10-25 — Lady Luck çaldığı taşı yazıyla değil, göz önünde alır: taş ıstakadaki
@@ -4978,65 +5023,8 @@
     SFX.tick?.();
     anim.onfinish = () => {
       fly.remove();
-      const kiss = document.createElement('div');
-      kiss.className = 'll-kiss';
-      kiss.textContent = '💋';
-      kiss.style.left = `${LADY_LIPS.x}px`; kiss.style.top = `${LADY_LIPS.y}px`;
-      stage.appendChild(kiss);
       SFX.crack();
-      setTimeout(() => kiss.remove(), 1100);
     };
-  }
-
-  function showCheatFlash(f) {
-    if (f.kind === 'ladySteal') { ladyStealAnim(f); return; }
-    const bad = f.side === 'boss' ? f.kind !== 'exposed' : f.kind === 'caught';
-    let title, body;
-    /* PLAYTEST 20 · GRUP G — bildirimler artık SOMUT olayı yazar:
-       hangi taş çalındı, kaç taş biriktı, yakalanınca kaçı geri döndü. */
-    if (f.side === 'joker' && f.kind === 'steal') {
-      title = t('cheatStealTitle');
-      body = t('cheatStealBody', T.color(f.color), f.number, f.total, Math.round(f.risk * 100));
-    } else if (f.side === 'joker' && f.kind === 'hit') {
-      // eski kayıtlardan gelen çarpan olayı (P19 uyumu)
-      title = t('cheatHitTitle');
-      body = t('cheatHitBody', f.gain.toFixed(1), f.bank.toFixed(1), Math.round(f.risk * 100));
-    } else if (f.side === 'joker') {
-      title = t('cheatCaughtTitle');
-      /* P35 · Grup H — yakalanınca silinen hile puanı yazılır */
-      body = f.lost > 0 ? t('cheatCaughtLost', f.lost)
-        : (f.back > 0 ? t('cheatCaughtBack', f.back) : t('cheatCaughtBare'));
-    } else if (f.kind === 'exposed') {
-      title = t('cheatBossExposedTitle');
-      body = f.back ? t('cheatBossExposedBack', f.coin, T.color(f.back.color), f.back.number)
-        : t('cheatBossExposedBody', f.coin);
-    } else if (f.kind === 'ladySteal') {
-      title = t('ladyStealTitle');
-      body = t('cheatBossStealHand', T.color(f.color), f.number);
-    } else if (f.kind === 'stealHand') {
-      title = t('cheatBossHitTitle');
-      body = t('cheatBossStealHand', T.color(f.color), f.number);
-    } else if (f.kind === 'stealDeck') {
-      title = t('cheatBossHitTitle');
-      body = t('cheatBossStealDeck', f.n);
-    } else if (f.kind === 'score') {
-      title = t('cheatBossHitTitle');
-      body = t('cheatBossScore', f.amount);
-    } else if (f.kind === 'mult') {
-      title = t('cheatBossHitTitle');
-      body = t('cheatBossMult', f.amount.toFixed(1));
-    } else {
-      title = t('cheatBossHitTitle');
-      body = t('cheatBossTile', T.color(f.color), f.from);
-    }
-    const ov = document.createElement('div');
-    ov.className = 'cheat-flash' + (bad ? ' bad' : ' good');
-    ov.innerHTML = `<div class="cf-title">${title}</div><div class="cf-body">${body}</div>`;
-    const host = document.querySelector('#gameScreen .gm-stage') || document.body;
-    host.appendChild(ov);
-    if (bad) { SFX.crack(); islekFlash(); } else { SFX.meld(2); }
-    setTimeout(() => ov.classList.add('out'), 1500);
-    setTimeout(() => ov.remove(), 1900);
   }
 
   function islekFlash() {
@@ -5135,9 +5123,9 @@
     ov.className = 'pk-ov tone-violet';
     ov.innerHTML =
       `<div class="pk-box rt-box2">` +
-      `<div class="pk-title">🥁 ${t(isBoss ? 'ritimTitleBoss' : 'ritimTitle', level)}</div>` +
+      `<div class="pk-title">${t(isBoss ? 'ritimTitleBoss' : 'ritimTitle', level)}</div>` +
       `<div class="pk-sub-title">${t(isBoss ? 'ritimBodyBoss' : 'ritimBody', expect.length)}</div>` +
-      `<button class="rt-pad" id="rtPad" type="button" aria-label="${t('ritimPad')}">🥁</button>` +
+      `<button class="rt-pad" id="rtPad" type="button" >${t('ritimPad')}</button>` +
       `<div class="rt-lane">${expect.map((e, i) =>
         `<span class="rt-dot" data-i="${i}" style="left:${(4 + 92 * e / span).toFixed(1)}%"></span>`).join('')}</div>` +
       `<div class="rt-status" id="rtStatus">${t('ritimListen')}</div>` +
@@ -5331,7 +5319,7 @@
     ov.id = 'pandoraOv';
     ov.innerHTML =
       `<div class="pd-box">` +
-      `<div class="pd-lid">📦</div>` +
+      `<div class="pd-lid"><i></i></div>` +
       `<div class="pd-burst"></div>` +
       `<div class="pd-card">` +
       /* P91 — ikon yerine varyant kartının Figma çizimi (468:2/58/133) */
@@ -5498,7 +5486,7 @@
       const artK = isFz ? 'fuzyon' : j.key;
       const fzArt = JOKER_ART.has(artK);
       b.innerHTML = `<div class="fz-card${fzArt ? ' fz-art jk-' + artK : ''}${!isFz && j.key === 'truva' && j.pandora ? ' pd-' + j.pandora : ''}">${fzArt ? '' : jokerIcon(artK)}</div>`
-        + `<b>${isFz ? '⚗ ' + T.name(JOKER_DEFS.fuzyon) : T.name(j)}</b><span>${Game.isRunLong(j) ? t('tipUsesRun') : t('fzRounds', j.usesLeft)}`
+        + `<b>${isFz ? '' + T.name(JOKER_DEFS.fuzyon) : T.name(j)}</b><span>${Game.isRunLong(j) ? t('tipUsesRun') : t('fzRounds', j.usesLeft)}`
         + (inBackup ? ` · ${t('fzInBackup')}` : '') + `</span>`;
       attachTip(b, isFz ? j : { name: T.name(j), desc: T.desc(j), accent: j.rarity, rarityText: T.rarity(j.rarity), key: j.key }, {});
       b.addEventListener('click', () => {
@@ -5606,7 +5594,7 @@
       if (k.faces.length) setTimeout(() => toast(t('kagitToast', k.faces.join(', ')), true), 700);
       render();
     }
-    cheatFlash();   // Grup G (P19) — raundun ilk turundaki hile de duyurulsun
+    stealFlash();   // Grup G (P19) — raundun ilk turundaki hile de duyurulsun
     s.roundStartNotes = [];
     if (s.seytanPending) { showSeytanPop(s.seytanPending); s.seytanPending = null; }
     /* Grup F: Boşluk artık sessiz çalışmıyor — ne yuttuğunu ve ne
@@ -5633,25 +5621,43 @@
     const maxRef = (typeof TUCCAR_MAX_REFUSE !== 'undefined') ? TUCCAR_MAX_REFUSE : 4;
     const left = Math.max(0, maxRef - (Game.slotRecs().find(j => j.key === 'tuccar')?.refuseStreak || 0));
     let lastPicked = s.tuccarOffer.options[0]?.key;
+    /* P142 (kullanıcı 2026-11-27: "teklif menüsünü UX/UI'ımıza uygun yeniden tasarla") — bahis penceresiyle aynı
+       dil (pk-ov): başlık plakası, koyu kuyu içinde krem kartlar; kartın üstünde büyük bedel, altında karşılığı.
+       Boss'ta kart "bedel / ceza" diye ikiye ayrılır; üzerine gelinen kart kırmızı çerçeve alır (reddedersen
+       onun cezası). Sınıf adları (offer-opt, offer-sub, offer-warn, #tucNo) testler için korunur. */
     const ov = document.createElement('div');
     ov.id = 'tuccarPop';
-    ov.className = 'offer-pop';
+    ov.className = 'pk-ov tone-gold offer-ov' + (isBoss ? ' offer-boss' : '');
     ov.innerHTML =
-      `<div class="tp-box offer-box${isBoss ? ' boss-box' : ''}">` +
-      `<h3>${isBoss ? t('tuccarBossTitle') : t('tuccarTitle')}</h3>` +
-      `<p class="offer-sub">${isBoss ? t('tuccarBossSub') : t('tuccarSub')}</p>` +
-      `<div class="offer-opts"></div>` +
-      `<div class="offer-foot">` +
-      `<button class="btn ghost" id="tucNo">${isBoss ? t('tuccarBossRefuse') : t('tuccarRefuse')}</button>` +
-      `<span class="offer-warn">${isBoss ? t('tuccarBossWarn')
+      `<div class="pk-box">` +
+      `<div class="pk-title">${isBoss ? t('tuccarBossTitle') : t('tuccarTitle')}</div>` +
+      `<div class="pk-sub-title offer-sub">${isBoss ? t('tuccarBossSub') : t('tuccarSub')}</div>` +
+      `<div class="pk-body pk-choice offer-opts"></div>` +
+      `<div class="pk-foot offer-foot">` +
+      `<button class="ep-btn offer-refuse" id="tucNo">${isBoss ? t('tuccarBossRefuse') : t('tuccarRefuse')}</button>` +
+      `<span class="pk-hint offer-warn">${isBoss ? t('tuccarBossWarn')
         : (left <= 1 ? t('tuccarLast') : t('tuccarWarn', left))}</span>` +
       `</div></div>`;
     const opts = ov.querySelector('.offer-opts');
+    /* teklif metni "X ver → Y" (boss: "X — yoksa Y"): iki satıra bölünür */
+    const split = (txt) => {
+      const m = String(txt).split(isBoss ? /\s+—\s+(?:yoksa|otherwise|or else)\s+/i : /\s*→\s*/);
+      return m.length === 2 ? m : [txt, ''];
+    };
     for (const o of s.tuccarOffer.options) {
       const b = document.createElement('button');
-      b.className = 'offer-opt';
-      b.innerHTML = `<span class="oo-cost">${t('tuccarCost', o.cost, COIN)}</span>` +
-        `<span class="oo-text">${T.ev(o.text)}</span>`;
+      b.className = 'pk-card offer-opt';
+      const [give, get] = split(T.ev(o.text));
+      /* P142 (kullanıcı 2026-11-28: "üstte ne kadar olduğu yazıyor, ayrıca 'şu kadar coin verirsin' yazmaya gerek yok") —
+         bedel coin ise kartın tepesinde etiketli tek bir bedel kutusu durur, "X coin ver" satırı yazılmaz. Bedel coin
+         değilse (taş, puan) bedel satırı yazıyla kalır. */
+      b.innerHTML = (o.cost && get
+          ? `<div class="oo-cost"><span class="oo-lbl">${t(isBoss ? 'tuccarLblPay' : 'tuccarLblGive')}</span><b>${COIN}${o.cost}</b></div>`
+          : '')
+        + (get
+          ? (o.cost ? '' : `<div class="oo-row"><span class="oo-lbl">${t(isBoss ? 'tuccarLblPay' : 'tuccarLblGive')}</span><span class="oo-text">${give}</span></div>`)
+            + `<div class="oo-row oo-get"><span class="oo-lbl">${t(isBoss ? 'tuccarLblPen' : 'tuccarLblGet')}</span><span class="oo-text">${get}</span></div>`
+          : `<div class="oo-row"><span class="oo-text">${give}</span></div>`);
       // boss'ta hangi teklifin cezasını yiyeceğin belli olsun: üzerine gelince seçilir
       b.addEventListener('mouseenter', () => {
         lastPicked = o.key;
@@ -5671,7 +5677,7 @@
     ov.querySelector('#tucNo').addEventListener('click', () => {
       const r = Game.refuseTuccar(isBoss ? lastPicked : undefined);
       ov.remove();
-      if (r.note) toast(T.ev(r.note), !r.gone && !r.penalty);
+      if (r.note) toast(T.ev(r.note), true);
       render();
     });
     document.body.appendChild(ov);
@@ -5716,7 +5722,6 @@
      duruyor ama hep false kalır. */
   let teraziPick = false;
   let teraziSel = null;   // "Taş Feda Et" düğmesinin hedefi (tek seçili taş)
-  let paratonerSel = null;  // P29 · Grup F — "Yem Seç" düğmesinin hedefi
 
   function finishConsum(res) {
     if (!res.ok) { toast(res.error || t('useFail')); render(); return; }
@@ -5731,7 +5736,7 @@
     const ov = document.createElement('div');
     ov.id = 'terziPick';
     ov.innerHTML =
-      `<div class="tp-box"><h3>🎨 ${T.consumName('boya', CONSUMABLES.boya.name)}</h3>` +
+      `<div class="tp-box"><h3>${T.consumName('boya', CONSUMABLES.boya.name)}</h3>` +
       `<p>${t('consumPickColor')}</p>` +
       `<div class="tp-row"></div>` +
       `<div class="tr-row"><button class="btn ghost" id="cpCancel">${t('cancel')}</button></div></div>`;
@@ -5758,7 +5763,7 @@
     if (!all.length) { toast(t('consumNoJoker')); return; }
     const ov = document.createElement('div');
     ov.id = 'terziPick';
-    ov.innerHTML = `<div class="tp-box"><h3>🎭 ${T.name({ key: 'kuklaUstasi', name: JOKER_DEFS.kuklaUstasi.name })}</h3>`
+    ov.innerHTML = `<div class="tp-box"><h3>${T.name({ key: 'kuklaUstasi', name: JOKER_DEFS.kuklaUstasi.name })}</h3>`
       + `<p>${t('kuklaPickSub')}</p><div class="tp-row" style="flex-wrap:wrap"></div>`
       + `<div class="tr-row"><button class="btn ghost" id="cjCancel">${t('cancel')}</button></div></div>`;
     const row = ov.querySelector('.tp-row');
@@ -5782,7 +5787,7 @@
     const ov = document.createElement('div');
     ov.id = 'pactOv';
     ov.className = 'pk-ov tone-violet altar-ov';
-    ov.innerHTML = `<div class="pk-box"><div class="pk-title">🩸 ${T.consumName(def.key, def.name)}</div>`
+    ov.innerHTML = `<div class="pk-box"><div class="pk-title">${T.consumName(def.key, def.name)}</div>`
       + `<div class="pk-sub-title">${t('pactSub')}</div><div class="pk-body pk-choice">`
       + `<button class="pk-card altar-card" data-c="easy"><div class="ac-tag">${t('pactEasy')}</div><div class="ac-cost">${t('pactEasyDesc')}</div></button>`
       + `<button class="pk-card altar-card ac-perm" data-c="hard"><div class="ac-tag">${t('pactHard')}</div><div class="ac-cost">${t('pactHardDesc')}</div></button>`
@@ -5800,7 +5805,7 @@
     const ov = document.createElement('div');
     ov.id = 'nobetciOv';
     ov.className = 'pk-ov tone-violet altar-ov';
-    ov.innerHTML = `<div class="pk-box"><div class="pk-title">🗿 ${TOTEM_DEFS.nobetci.name}</div>`
+    ov.innerHTML = `<div class="pk-box"><div class="pk-title">${TOTEM_DEFS.nobetci.name}</div>`
       + `<div class="pk-sub-title">${t('nobetciSub')}</div><div class="pk-body nobetci-row"></div></div>`;
     const row = ov.querySelector('.pk-body');
     for (const tile of Game.state.hand) {
@@ -6113,11 +6118,11 @@
     const ov = document.createElement('div');
     ov.id = 'pathOv';
     ov.className = 'pk-ov tone-violet path-ov';
-    ov.innerHTML = `<div class="pk-box"><div class="pk-title">🜏 ${t('pathTitle', s.stage)}</div>`
+    ov.innerHTML = `<div class="pk-box"><div class="pk-title">${t('pathTitle', s.stage)}</div>`
       + `<div class="pk-sub-title">${t('pathSub', lv)}</div><div class="pk-body pk-choice">`
-      + `<button class="pk-card path-card path-safe" data-p="safe"><div class="pk-ico">🛡</div><div class="pk-name">${t('pathSafe')}</div>`
+      + `<button class="pk-card path-card path-safe" data-p="safe"><div class="pk-name">${t('pathSafe')}</div>`
       + `<div class="pk-desc">${t('pathSafeDesc', CURSE.safeCoin)}</div><div class="path-t">${t('pathTarget', tSafe, pct(tSafe))}</div></button>`
-      + `<button class="pk-card path-card path-cursed" data-p="cursed"><div class="pk-ico">🜏</div><div class="pk-name">${t('pathCursed')}</div>`
+      + `<button class="pk-card path-card path-cursed" data-p="cursed"><div class="pk-name">${t('pathCursed')}</div>`
       + `<div class="pk-desc">${t('pathCursedDesc')}</div><div class="path-t">${t('pathTarget', tCursed, pct(tCursed))}</div></button>`
       + `</div></div>`;
     ov.querySelectorAll('.path-card').forEach((c) => c.addEventListener('click', () => {
@@ -6202,8 +6207,6 @@
     renderCurse();
     /* Yol seçimi artık harita şeridinde (renderPathMap); bekleyen seçim varken oyun ekranı haritaya döner */
     if (Game.needsPath && Game.needsPath() && curScreen() === 'game' && !document.querySelector('.pk-ov')) setTimeout(() => showScreen('map'), 0);
-    if (Game.state && Game.state.ghostOffer && !document.getElementById('ghostOv'))
-      setTimeout(showGhostOffer, 0);   // P100 — kayıttan dönülünce bekleyen Hayalet tur teklifi
     applyRunTheme();   // P78 — boss raundu arayüzü (raund ekran değişmeden başlayıp bitebilir)
     corpScreen();   // P130
     renderChessClock();   // P110
@@ -6252,7 +6255,7 @@
     el.okeyChip.title = `${t('okeyChip')} ${okeyLabel()}`;
     if (Game.isBossRound()) {
       const bn = T.bossName(s.boss.key, s.boss.name), bd = T.bossDesc(s.boss.key, s.boss.desc);
-      el.bossChip.textContent = `⚔ ${bn}`;
+      el.bossChip.textContent = `${bn}`;
       el.bossChip.title = bd;
       el.bossChip.classList.remove('hidden');
       let bossHtml = `<span class="bb-name">${t('bossBanner', bn)}</span><span class="bb-desc">${bd}</span>`;
@@ -6539,7 +6542,7 @@
       });
       const tag = document.createElement('div');
       tag.className = 'combo-tag';
-      tag.textContent = `${c.owner === 'orion' ? '🎩 ORION · ' : ''}${T.typeName(c.type)} · ${t(c.gumClosed ? 'gumClosedTag' : 'islenebilir')}`;   // P90
+      tag.textContent = `${c.owner === 'orion' ? 'ORION · ' : ''}${T.typeName(c.type)} · ${t(c.gumClosed ? 'gumClosedTag' : 'islenebilir')}`;   // P90
       box.append(tilesDiv, tag);
       /* Grup I — açık kombinasyondaki okeyi, yerine geçtiği gerçek taşla
          değiştir: gerçek taş kombinasyona girer, okey ele döner. */
@@ -6649,7 +6652,7 @@
       el.fatalityChip.classList.toggle('hit', !!s.fatalityHit);
       if (show) {
         el.fatalityChip.innerHTML =
-          `<span class="fc-ico">☠</span><span class="fc-val">${t('fatalityChip', s.fatalityLimit)}</span>`;
+          `<span class="fc-val">${t('fatalityChip', s.fatalityLimit)}</span>`;
         attachTip(el.fatalityChip, {
           name: T.bossName('fatality', 'Fatality'),
           rarityText: t('fatalityTipTag'),
@@ -6698,7 +6701,7 @@
       }
       if (sideLine) items.push({ k: 'side', ico: '🎟', title: t('kbSide'), txt: t('sideChip', T.ev(SIDE_NAME(sideLine.key)), sideLine.odds) });
       if (ruletLine) items.push({ k: 'rulet', ico: ruletLine === 'red' ? '🔴' : '⚫', title: T.name({ key: 'rulet', name: JOKER_DEFS.rulet.name }),
-        txt: t('ruletChip', ruletLine === 'red' ? '🔴 ' + t('cRed') : '⚫ ' + t('cBlack')) });
+        txt: t('ruletChip', ruletLine === 'red' ? t('cRed') : t('cBlack')) });
       /* Hileli Zar: köşede bu turun zarı; hile hakkı varken rozet parlar, tıklayınca seçici (karta sol tık da olur) */
       if (s.status === 'playing' && s.zarFace && Game.hasActive('hileliZar'))
         items.push({ k: 'zar', ico: '🎲', title: T.name({ key: 'hileliZar', name: JOKER_DEFS.hileliZar.name }), mark: s.zarFace,
@@ -6757,10 +6760,6 @@
       const canT = Game.canTeraziSacrifice && Game.canTeraziSacrifice();
       const one = selection.size === 1 ? [...selection][0] : null;
       teraziSel = canT && one != null ? one : null;
-      /* P29 · Grup F — Paratoner yemi aynı kalıptan beslenir: taş atma
-         aşamasında ıstakada TAM BİR taş seçiliyken düğme etkinleşir. */
-      const canP = Game.canParatonerBait && Game.canParatonerBait();
-      paratonerSel = canP && one != null ? one : null;
     }
 
     /* PLAYTEST 20 · GRUP A — FEDA ÖNİZLEMESİ.
@@ -6785,20 +6784,8 @@
     } else {
       el.previewBar.classList.remove('pv-terazi');
     }
-    /* P29 · Grup F — yem önizlemesi. Terazi önizlemesi varsa ona
-       dokunulmaz (o daha dar bir durum: feda hakkı tur başına bir kez). */
-    const ptPv = !tzPv && paratonerSel != null && Game.paratonerPreview
-      ? Game.paratonerPreview(paratonerSel) : null;
-    if (ptPv) {
-      const nm = `${T.color(ptPv.tile.color)} ${ptPv.tile.number}`;
-      el.previewBar.innerHTML = `<span class="pv-tz">${t('paratonerPv', nm, ptPv.gain)}</span>`;
-      el.previewBar.classList.remove('hidden');
-      el.previewBar.classList.add('pv-terazi');
-      fitPreview();
-      keepPreviewClear();
-    }
     // Önizleme
-    const pvFull = (tzPv || ptPv) ? null : Game.previewScore();
+    const pvFull = tzPv ? null : Game.previewScore();
     /* P111 — Balatro gibi: çubuk jokersiz grup değerini gösterir; jokerler katkı verecekse yanında
        "+ jokerler" yazar, gerçek sonuç onaydan sonra puanlama sahnesinde ortaya çıkar */
     const pvBase = pvFull && Game.previewBase ? Game.previewBase() : null;
@@ -6868,18 +6855,6 @@
       el.btnTerazi.disabled = !teraziSel;
       el.btnTerazi.title = teraziSel ? '' : t('teraziNeedOne');
     }
-    /* P29 · Grup F — "Yem Seç". Yem zaten kuruluysa düğme "Yemi Kaldır"a
-       döner; aynı taş ikinci kez verildiğinde motor da işareti kaldırır,
-       yani iki yol da aynı sonucu verir. */
-    {
-      const canP = Game.canParatonerBait && Game.canParatonerBait();
-      const set = canP && Game.state.paratonerBait != null;
-      /* P103 (kullanıcı): ek "Yem Seç" düğmesi kalktı — yem jokere SOL TIKLA seçilir (jokerActs → doParatoner); düğme DOM'da gizli durur */
-      el.btnParatoner.classList.add('hidden');
-      el.btnParatoner.textContent = set ? t('paratonerClear') : t('paratonerBtn');
-      el.btnParatoner.disabled = !set && !paratonerSel;
-      el.btnParatoner.title = (set || paratonerSel) ? '' : t('paratonerNeedOne');
-    }
     /* P100 — eski "Rüşvet" taş değiştirme düğmesi kalktı (Bahşiş Kavanozu artık kart tıkıyla kırılır). */
     el.btnRusvet.classList.add('hidden');
     /* Butonlar - Figma 210:3746: barda TEK birincil buton vardır.
@@ -6942,7 +6917,7 @@
   function maybeAutoFinish() {
     if (autoFinishing || !Game.hopelessRound()) return;
     autoFinishing = true;
-    toast(t('autoLoss'));
+    toast(t('autoLoss'), true);
     /* denetim LG-02 — puanlama sahnesi (#scoreSeq) sürerken bekle: sahnenin sonundaki
        raund-sonu çağrısıyla yarışıp Game Over'ı iki kez kuruyor, kayıp raundu iki kez
        sayıyordu. Sahne bitince (kutu kalkınca) karar yeniden verilir. */
@@ -7031,7 +7006,7 @@
     pop.className = 'nope-pop';
     pop.textContent = label;
     pop.style.left = `${(ar.left + ar.width / 2 - sr.left) / sc}px`;
-    pop.style.top = `${(ar.top - sr.top) / sc - 8}px`;
+    pop.style.top = `${(ar.top - sr.top) / sc - 24}px`;   // P142 (kullanıcı): düğmeye çok yakındı
     stage.appendChild(pop);
     setTimeout(() => pop.remove(), 1600);
   }
@@ -7143,7 +7118,7 @@
       else if (o.k === 'flat') { parts.push(sgn(o.v)); kind = kind || 'flat'; }
       else if (o.k === 'chipsAdd') { parts.push(`+${o.v}`); kind = kind || 'chips'; }
       else if (o.k === 'chipsMul') { parts.push(`×${+o.v.toFixed(2)}`); kind = kind || 'chips'; }
-      else if (o.k === 'coin') { parts.push(`+${o.v} 🪙`); kind = kind || 'coin'; }
+      else if (o.k === 'coin') { parts.push(`+$${o.v}`); kind = kind || 'coin'; }
     }
     if (parts.length) return { kind, label: parts.join(' ') };
     const tx = T.ev ? T.ev(String(tr.text || '')) : String(tr.text || '');
@@ -7193,6 +7168,10 @@
     if (!j && (tr.id === 'orion' || tr.id === 'ladyLuck')) j = js.find((x) => x.name && String(tr.text || '').includes(x.name));
     return j ? el.jokerSlots.querySelector(`[data-jid="${j.id}"]`) : null;
   };
+  /* P142 (kullanıcı 2026-11-27: "sayılar çok hızlı, birbirinin içinden geçiyor, üst üste biniyor") — sahne
+     adımları tek tek okunur: bir taşın "+sayı" yazısı ve bir jokerin balonu, bir sonraki gelmeden söner
+     (aynı anda ekranda yalnız biri). Hızlı animasyon ayarı yine yarıya indirir. */
+  const SEQ_TILE_STEP = 260, SEQ_STEP = 950, SEQ_STEP_BIG = 1250;
   var seqLock = false;   // denetim CS-13 — sahne sürerken render() puan panelini son değere atlatmasın (var: render() bu satırdan önce de çağrılır, TDZ olmasın)
   function playScoreSeq(res, oldScore, done) {
     const steps = seqOrder((res.triggered || []).map((tr) => { const ops = seqOps(tr); return { tr, ops, ...seqLabel(tr, ops) }; }));
@@ -7289,13 +7268,13 @@
         te.animate([{ transform: 'none' }, { transform: 'translateY(-14px) scale(1.14) rotate(-4deg)', offset: .35 },
           { transform: 'translateY(2px) scale(.97)', offset: .7 }, { transform: 'none' }], { duration: 300 * k, easing: 'ease-out' });
         const num = (te.querySelector('.num') || {}).textContent;
-        if (num && /^\d+$/.test(num.trim())) popText(te, '+' + num.trim(), 'pt-chip');
+        if (num && /^\d+$/.test(num.trim())) popText(te, '+' + num.trim(), 'pt-chip', SEQ_TILE_STEP * .95);
         PFX.play('hitSpark', te, { aim: -Math.PI / 2 + (i % 2 ? .5 : -.5), height: 0, dy: -72 });   // P126 · A — taşın üstünde (krem taş üstünde beyaz kıvılcım görünmüyordu)
         beep(392 * Math.pow(2, Math.min(i, 18) / 12), .05, 'square', .05);
       }, at));
-      at += 110 * k;
+      at += SEQ_TILE_STEP * k;
     });
-    if (meldEls.length) at += 160 * k;
+    if (meldEls.length) at += 260 * k;
     steps.forEach((st, i) => {
       timers.push(setTimeout(() => {
         st.ops.forEach(P.apply); st.done = true;
@@ -7310,7 +7289,7 @@
         const p = toStage((card || box).getBoundingClientRect());
         b.style.left = `${p.x}px`; b.style.top = `${p.y}px`;
         stage.appendChild(b);
-        timers.push(setTimeout(() => { b.remove(); card && card.classList.remove('jk-seq-pop'); }, 1050 * k));
+        timers.push(setTimeout(() => { b.remove(); card && card.classList.remove('jk-seq-pop'); }, (st.big ? SEQ_STEP_BIG : SEQ_STEP) * .92 * k));
         if (st.kind === 'boss') beep(220, .16, 'sawtooth', .07);
         else beep(560 + Math.min(i, 10) * 70, .09, 'square', .08);
         if (st.big) { stageFlash(.42, stage); screenShake(.55, stage); beep(98, .22, 'triangle', .1); PFX.play('zapHit', card || box); }   // P122 — dev çarpan · P126 · A yıldırım
@@ -7318,7 +7297,7 @@
       /* P122 — ×3 ve üstü bir kat: an bir nefes uzar ("donma"), ardından sahne devam eder */
       const xm = /×\s*(\d+(?:[.,]\d+)?)/.exec(`${(st.tr && st.tr.text) || ''} ${st.label || ''}`);   // balon farkı yazar (+360), kat jokerin metninde
       st.big = !!(xm && parseFloat(xm[1].replace(',', '.')) >= 3);
-      at += (st.big ? 980 : 720) * k;
+      at += (st.big ? SEQ_STEP_BIG : SEQ_STEP) * k;
     });
     /* sonda toplam: puan paneli eski değerden yeniye sayar */
     timers.push(setTimeout(() => {
@@ -7342,7 +7321,7 @@
           [523, 659, 784, 1047].forEach((f, i) => beep(f, .12, 'triangle', .07, i * .07));
         }, 700 * k));
       }
-      const from = oldScore, to = Game.state.score, t0 = performance.now(), dur = 800 * k;
+      const from = oldScore, to = Game.state.score, t0 = performance.now(), dur = 1100 * k;
       const tick2 = (now) => {
         if (finished) return;
         const p = Math.min(1, (now - t0) / dur);
@@ -7368,7 +7347,7 @@
     const opts = Game.betOptions();
     ov.innerHTML =
       `<div class="pk-box">` +
-      `<div class="pk-title">🎰 ${t('betTitle')}</div>` +
+      `<div class="pk-title">${t('betTitle')}</div>` +
       `<div class="pk-sub-title">${t('betSub')}</div>` +
       `<div class="pk-body pk-choice"></div>` +
       `<div class="pk-foot"><span class="pk-hint">${t('betKatlaHint')}</span></div></div>`;
@@ -7407,38 +7386,6 @@
     return t('brPrefix') + parts.join(' + ') + '.';
   }
 
-  /* P100 — HAYALET TUR TEKLİFİ (kullanıcı kararı 2026-10-14). Katla penceresinin
-     kalıbı: iki kart, biri oyna biri vazgeç. Karar verilmeden raund ilerlemez. */
-  function showGhostOffer() {
-    const s = Game.state;
-    if (!s || !s.ghostOffer || document.getElementById('ghostOv')) return;
-    const ov = document.createElement('div');
-    ov.id = 'ghostOv';
-    ov.className = 'pk-ov tone-violet';
-    ov.innerHTML =
-      `<div class="pk-box">` +
-      `<div class="pk-title">👻 ${t('ghostTitle')}</div>` +
-      `<div class="pk-sub-title">${t('ghostBody', s.score, s.target)}</div>` +
-      `<div class="pk-body pk-choice">` +
-      `<button class="pk-card bet-card" data-k="play"><div class="pk-name">${t('ghostPlay')}</div>` +
-      `<div class="pk-desc">${t('ghostPlayDesc')}</div></button>` +
-      `<button class="pk-card bet-card bet-olumcul" data-k="pass"><div class="pk-name">${t('ghostPass')}</div>` +
-      `<div class="pk-desc">${t('ghostPassDesc')}</div></button>` +
-      `</div></div>`;
-    const choose = (play) => {
-      ov.remove();
-      const r = Game.ghostTurnChoice(play);
-      if (!r.ok) { toast(T.ev(r.error)); render(); return; }
-      if (r.events && r.events.length) notify(r.events);
-      selection.clear();
-      render();
-      if (r.roundOver) setTimeout(showRoundEnd, 300);
-    };
-    ov.querySelector('[data-k="play"]').addEventListener('click', () => choose(true));
-    ov.querySelector('[data-k="pass"]').addEventListener('click', () => choose(false));
-    document.body.appendChild(ov);
-  }
-
   function showKatlaOffer() {
     const s = Game.state;
     if (!s.katlaOffer || document.getElementById('katlaOv')) return;
@@ -7448,13 +7395,13 @@
     const next = s.katlaOffer.base * 2;
     ov.innerHTML =
       `<div class="pk-box">` +
-      `<div class="pk-title">🎯 ${t('katlaTitle')}</div>` +
+      `<div class="pk-title">${t('katlaTitle')}</div>` +
       `<div class="pk-sub-title">${t('katlaBody', s.score, s.katlaOffer.base, next, s.maxTurns - s.turn)}</div>` +
       (Game.isBossRound() ? `<div class="pk-sub-title katla-warn">${t('katlaBossWarn')}</div>` : '') +
       `<div class="pk-body pk-choice">` +
-      `<button class="pk-card bet-card" data-k="stay"><div class="pk-name">💰 ${t('katlaStay')}</div>` +
+      `<button class="pk-card bet-card" data-k="stay"><div class="pk-name">${t('katlaStay')}</div>` +
       `<div class="pk-desc">${t('katlaStayDesc')}</div></button>` +
-      `<button class="pk-card bet-card bet-olumcul" data-k="double"><div class="pk-name">🎲 ${t('katlaDouble')}</div>` +
+      `<button class="pk-card bet-card bet-olumcul" data-k="double"><div class="pk-name">${t('katlaDouble')}</div>` +
       `<div class="bet-target">${t('betTarget', next)}</div>` +
       `<div class="pk-desc">${t('katlaDoubleDesc')}</div></button>` +
       `</div></div>`;
@@ -7511,7 +7458,7 @@
     if (scr) { scr.classList.remove('kz-shake'); void scr.offsetWidth; scr.classList.add('kz-shake'); setTimeout(() => scr.classList.remove('kz-shake'), 500); }
     const f = document.createElement('div');
     f.className = 'katla-fold';
-    f.innerHTML = `<span class="kf-dice">🎲</span><span class="kf-old">${from}</span><span class="kf-arrow">→</span><span class="kf-new">${to}</span>`;
+    f.innerHTML = `<span class="kf-old">${from}</span><span class="kf-arrow">→</span><span class="kf-new">${to}</span>`;
     document.body.appendChild(f);
     setTimeout(() => f.remove(), 1700);
   }
@@ -7536,7 +7483,7 @@
       `<div class="jp-rain">${rain}</div>` +
       `<div class="jp-box"><div class="jp-title">${title}</div>` +
       `<div class="jp-score">${s.score} / ${s.target}</div>` +
-      `<div class="jp-count"><span class="jp-coinico">🪙</span> +<b id="jpNum">0</b></div>` +
+      `<div class="jp-count">+$<b id="jpNum">0</b></div>` +
       `<div class="jp-rows">${rows.map((x, i) => `<div class="jp-row" style="animation-delay:${0.5 + i * 0.35}s">${x}</div>`).join('')}</div>` +
       `<details class="jp-more"><summary>${t('jpDetails')}</summary><div>${detailHtml}</div></details>` +
       `<button class="ep-btn" id="jpGo">${el.modalBtn.textContent}</button></div>`;
@@ -7578,11 +7525,11 @@
   function showRuletPick() {
     const ov = dockOv('ruletOv', 'gold');
     ov.innerHTML = `<div class="pk-box">` +
-      `<div class="pk-title">🎡 ${t('ruletTitle')}</div>` +
+      `<div class="pk-title">${t('ruletTitle')}</div>` +
       `<div class="pk-sub-title">${t('ruletSub')}</div>` +
       `<div class="pk-body pk-choice">` +
-      `<button class="pk-card rl-card rl-red" data-c="red"><div class="pk-ico">🔴</div><div class="pk-name">${t('cRed')}</div></button>` +
-      `<button class="pk-card rl-card rl-black" data-c="black"><div class="pk-ico">⚫</div><div class="pk-name">${t('cBlack')}</div></button>` +
+      `<button class="pk-card rl-card rl-red" data-c="red"><div class="pk-ico rl-sw"></div><div class="pk-name">${t('cRed')}</div></button>` +
+      `<button class="pk-card rl-card rl-black" data-c="black"><div class="pk-ico rl-sw"></div><div class="pk-name">${t('cBlack')}</div></button>` +
       `</div></div>`;
     ov.querySelectorAll('.rl-card').forEach(b => b.addEventListener('click', () => {
       const r = Game.ruletPick(b.dataset.c);
@@ -7602,7 +7549,7 @@
     const nums = Array.from({ length: 13 }, (_, i) => i + 1);
     const inHand = (n) => s.hand.filter(x => !x.jokerTile && !Game.isOkeyTile(x) && x.number === n).length;
     ov.innerHTML = `<div class="pk-box">` +
-      `<div class="pk-title">🎲 ${t('zarCheatTitle')}</div>` +
+      `<div class="pk-title">${t('zarCheatTitle')}</div>` +
       `<div class="pk-sub-title">${t('zarCheatSub', Game.hileliZarBonus().toFixed(2), (Game.hileliZarBonus() + HILELI_ZAR_GROW).toFixed(2))}</div>` +
       `<div class="pk-body zar-grid">` +
       nums.map(n => `<button class="zar-btn${n === s.zarFace ? ' cur' : ''}" data-n="${n}"><span class="zn">${n}</span><span class="zh">${t('zarInHand', inHand(n))}</span></button>`).join('') +
@@ -7612,7 +7559,7 @@
       if (!r.ok) return;
       SFX.dice();
       ov.remove();
-      toast(t('zarCheatToast', r.face, r.bonus.toFixed(2)));
+      toast(t('zarCheatToast', r.face, r.bonus.toFixed(2)), true);
       render();
     }));
     ov.querySelector('[data-a="x"]').addEventListener('click', () => ov.remove());
@@ -7622,7 +7569,7 @@
     const st = Game.sideBetState();
     const ov = dockOv('sideOv', 'azure');
     ov.innerHTML = `<div class="pk-box">` +
-      `<div class="pk-title">🎲 ${t('sideTitle', st.stake)}</div>` +
+      `<div class="pk-title">${t('sideTitle', st.stake)}</div>` +
       `<div class="pk-sub-title">${t('sideSub')}</div>` +
       `<div class="pk-body pk-choice"></div>` +
       `<div class="pk-foot"><button class="btn ghost" id="sidePass">${t('sidePass')}</button></div></div>`;
@@ -7678,7 +7625,7 @@
           + `<div class="hl-how"><div class="hl-how-t">${t('bjHowTitle')}</div>`
           + `<ol><li>${t('bjHow1')}</li><li>${t('bjHow2')}</li><li>${t('bjHow3', h.stake)}</li></ol></div>`
           + `<div class="bj-rules">${t('bjRules')}</div>`;
-        foot = `<button class="btn primary" data-a="accept">🃏 ${t('bjAccept')}</button>`
+        foot = `<button class="btn primary" data-a="accept">${t('bjAccept')}</button>`
           + `<button class="btn ghost" data-a="skip">${t('bjSkip', h.stake)}</button>`;
       } else {
         /* kullanıcı: Kasa üstte, sen altta (yan yana karışıyordu) */
@@ -7694,7 +7641,7 @@
           foot = `<button class="btn primary" data-a="close">${t('okBtn')}</button>`;
         }
       }
-      ov.innerHTML = `<div class="pk-box"><div class="pk-title">🃏 ${t('bjTitle')}</div>`
+      ov.innerHTML = `<div class="pk-box"><div class="pk-title">${t('bjTitle')}</div>`
         + `<div class="hl-body">${body}</div><div class="pk-foot hl-foot">${foot}</div></div>`;
       ov.querySelectorAll('[data-a]').forEach(bt => bt.addEventListener('click', () => act(bt.dataset.a)));
     };
@@ -8000,7 +7947,7 @@
            açılım OTOMATİK onaylanır. */
         try {
           const rr = Game.setRitimResult(success);
-          if (!success) { toast(t('ritimLose' + (rr.boss ? 'Boss' : ''))); SFX.crack(); }
+          if (!success) { toast(t('ritimLose' + (rr.boss ? 'Boss' : '')), true); SFX.crack(); }
           else if (rr.boss) { toast(t('ritimWinBoss'), true); SFX.meld(3); }
           else { toast(t('ritimWin', (rr.bonus || 0).toFixed(1)), true); SFX.meld(3); }
         } catch (e) {
@@ -8036,15 +7983,11 @@
       if (res.events.some(e => /İŞLEK|-100/.test(e))) { islekFlash(); SFX.islek(); }
       if (TUT.active && res.events.some(e => /^İŞLEK!/.test(e))) TUT.flag('islekHit');
     }
-    /* Grup G (P19) — The Cheating büyük bildirimi. Bu tek çağrı hem bossun
-       TUR SONU çözümünü hem de hemen ardından başlayan turun joker atışını
-       kapsar (ikisi de discard()'ın olay listesinde döner). */
-    cheatFlash();
+    stealFlash();   // Lady Luck'ın çaldığı taş (tur sonu çözümünde)
     setTimeout(() => {
       render();
       setTimeout(() => newTileIds.clear(), 600);
       if (res.worldRestart) return; // raund baştan — oyun ekranında kal
-      if (res.ghostOffer) { setTimeout(showGhostOffer, 380); return; }   // P100 — Hayalet tur (eski kayıt)
       if (Game.state.ghostJustStarted) { Game.state.ghostJustStarted = false; toast(t('ghostAutoToast'), true); }   // P109
       if (res.roundOver) setTimeout(showRoundEnd, 400);
       // P31 · Grup E — Tanrının Eli: önce desteden seçim, sonra yazı-tura
@@ -8071,15 +8014,6 @@
      GİRMEZ (motor kuralı) — o taş için işlek zarı da atılmaz. */
   /* P41 — üç düğmenin işi adlı fonksiyonda: aynı iş jokerin kartına sol
      tıkla da yapılır (jokerActs), iki ayrı kopya yazılmaz. */
-  function doParatoner() {
-    const set = Game.state && Game.state.paratonerBait != null;
-    if (!set && paratonerSel == null) { toast(t('paratonerNeedOne')); return; }
-    const r = Game.setParatonerBait(set ? null : paratonerSel);
-    if (!r.ok) { toast(r.error); render(); return; }
-    toast(r.note, true);
-    render();
-  }
-
   function doTerazi() {
     if (teraziSel == null) { toast(t('teraziNeedOne')); return; }
     const id = teraziSel;
@@ -8091,7 +8025,6 @@
     render();
   }
 
-  el.btnParatoner.addEventListener('click', doParatoner);
   el.btnTerazi.addEventListener('click', doTerazi);
 
   el.discardSlot.addEventListener('click', () => showPilePopup('discard'));
@@ -8894,7 +8827,7 @@
     ov.dataset.hint = key;
     ov.innerHTML =
       `<div class="mh-wrap"><div class="mh-msc"><i></i></div>` +
-      `<div class="mh-col"><div class="mh-bub"><div class="mh-tag">💡 ${t('hintTitle')}</div>` +
+      `<div class="mh-col"><div class="mh-bub"><div class="mh-tag">${t('hintTitle')}</div>` +
       `<div class="hint-body">${opts.html || t('hint_' + key)}</div></div>` +
       `<button class="tm-btn mh-ok" id="hintOk">${t('hintOk')}</button></div></div>`;
     let spot = null;
@@ -8928,7 +8861,7 @@
      öğreticide, harita/store'da ve başka bir pencere açıkken çıkmaz.
      Yeni bir elle kullanılan joker eklenince yalnız MANUAL_JOKERS'a yazılır.
      ============================================================ */
-  const MANUAL_JOKERS = ['ayna', 'satrancSaati', 'rusvet', 'terazi', 'paratoner', 'fuzyon', 'orion', 'hileliZar',
+  const MANUAL_JOKERS = ['ayna', 'satrancSaati', 'rusvet', 'terazi', 'fuzyon', 'orion', 'hileliZar',
     'karaMum', 'rehinci', 'kuklaUstasi', 'zamanTefecisi', 'mezarci', 'fisilti'];   // P136 — Lanetli Boyut: karta sol tıkla kullanılanlar
   const HINT_BLOCKERS = '#hintOv, .pk-ov, .ep-ov, .belt-ov, #fuzyonMenu, #fuzyonPick, #pandoraOv, #useChooser, '
     + '#ritimOv, #kumarOv, #terziPick, #okeySlotPick, #tutResume, #dolunayFx';
@@ -9030,7 +8963,7 @@
     const eksik = Math.max(0, (s.target || 0) - (s.score || 0));
     const rows = [
       [t('sumMissing'), `${eksik}`],
-      [t('sumCoinFlow'), `${COIN} +${s.statCoinIn || 0} / −${s.statCoinOut || 0}`],
+      [t('sumCoinFlow'), `+${COIN}${s.statCoinIn || 0} / −${COIN}${s.statCoinOut || 0}`],
       [t('sumExpired'), `${s.statExpired || 0}`],
       [t('sumBestMeld'), `${s.statBestMeld || 0}`],
     ];
@@ -9105,7 +9038,7 @@
         + (open ? ` data-mode="${p.key}"` : '') + ` data-i="${i}">`
         + (p.img ? `<div class="rp-art rp-art-img mode-${p.key}">`
           : `<div class="rp-art${p.soon ? ' rp-art-soon' : ''}"><span>${p.soon ? '?' : p.ico}</span>`)
-        + (p.soon || !open ? `<i class="rp-lock">🔒</i>` : '') + `</div>`
+        + (p.soon || !open ? `<i class="rp-lock">${t('rpLocked')}</i>` : '') + `</div>`
         + `<div class="rp-info"><div class="rp-name">${name}</div>`
         + (p.soon ? `<div class="rp-ribbon">${t('rpSoon')}</div>` : '')
         + `<div class="rp-desc">${desc}`
@@ -9327,7 +9260,7 @@
     ov.className = 'pk-ov tone-azure open-reel slot-ov';
     ov.innerHTML =
       `<div class="pk-box">` +
-      `<div class="pk-title">🎰 ${t('openReelTitle')}</div>` +
+      `<div class="pk-title">${t('openReelTitle')}</div>` +
       `<div class="pk-sub-title">${t('openReelBody', list.length)}</div>` +
       `<div class="pk-body pk-slot"></div>` +
       `<div class="pk-foot"><span class="pk-hint">${t('packSlotSpin')}</span></div></div>`;
@@ -9982,9 +9915,9 @@
         `</div></div>`;
     };
     /* tik kutulu kart */
-    const chk = (cls, label, on, icon = '') =>
+    const chk = (cls, label, on) =>
       `<button type="button" class="set-card set-chk ${cls}${on ? ' on' : ''}" aria-pressed="${on}">` +
-      `<span class="chk-ico">${icon}</span><span class="set-label">${label}</span>` +
+      `<span class="set-label">${label}</span>` +
       `<span class="chk-box">${sr(t(on ? 'musicOn' : 'musicOff'))}</span></button>`;
     const vol = (id, label, on, v) =>
       `<div class="set-card set-vol"><div class="vol-head">` +
@@ -10010,8 +9943,8 @@
         `</div>` +
         `<div class="set-grid">` +
         (finalsOn
-          ? chk('set-finaljk', t('finalJokerLabel'), finalJokerOn, '💋')
-          : `<div class="set-card set-chk set-locked"><span class="chk-ico">💋</span><span class="set-label">${t('finalJokerLabel')}</span><span class="set-note set-finaljk-lock">🔒 ${t('finalJokerLocked')}</span></div>`) +
+          ? chk('set-finaljk', t('finalJokerLabel'), finalJokerOn)
+          : `<div class="set-card set-chk set-locked"><span class="set-label">${t('finalJokerLabel')}</span><span class="set-note set-finaljk-lock">${t('finalJokerLocked')}</span></div>`) +
         `</div>`,
       look:
         `<div class="set-two set-three">` +   // P127 — tema · desen · yazı boyutu tek satırda (sekme boyu sabit: browser_denetim_ui)
@@ -10045,11 +9978,11 @@
         `<div class="set-card set-fw-card"><span class="go-txt"><span class="set-label">${t('finalWinHead')}</span>`
         + `<small>${t('finalWinDesc')}</small></span><div class="set-fw-grid">`
         + Object.values(typeof FINAL_BOSSES !== 'undefined' ? FINAL_BOSSES : {}).map((fb) =>
-          chk(`set-finalwin fw-${fb.key}`, t('finalWinLabel', fb.name), Finals.has(fb.reward || fb.key), fb.icon || '🏆')).join('')
+          chk(`set-finalwin fw-${fb.key}`, t('finalWinLabel', fb.name), Finals.has(fb.reward || fb.key))).join('')
         + `</div></div>` +
         (BETA ? go('setFinalsReset', t('finalsResetLabel'), t('finalsResetDesc'), !finalsOn)
           : `<div class="set-two">` + go('setFinalsReset', t('finalsResetLabel'), t('finalsResetDesc'), !finalsOn) +
-            chk('set-pfx', t('pfxLabel'), pfxOn, '✨') + `</div>`),   // P126b — deneme efektleri (yalnız prototip), yeni satır açmaz
+            chk('set-pfx', t('pfxLabel'), pfxOn) + `</div>`),   // P126b — deneme efektleri (yalnız prototip), yeni satır açmaz
     };
     ov.innerHTML =
       `<div class="tp-box set-box"><div class="set-plate">${t('settingsTitle')}</div>` +
@@ -10100,7 +10033,7 @@
     }));
     const dr = ov.querySelector('#setDiscReset');
     dr.addEventListener('click', () => {
-      if (!dr.dataset.confirm) { dr.dataset.confirm = '1'; dr.classList.add('warn'); dr.textContent = '⚠ ' + t('discResetConfirm'); return; }
+      if (!dr.dataset.confirm) { dr.dataset.confirm = '1'; dr.classList.add('warn'); dr.textContent = '' + t('discResetConfirm'); return; }
       Disc.reset();
       toast(t('discResetDone'), true);
       ov.remove();
@@ -10108,7 +10041,7 @@
     });
     const fr = ov.querySelector('#setFinalsReset');
     fr.addEventListener('click', () => {
-      if (!fr.dataset.confirm) { fr.dataset.confirm = '1'; fr.classList.add('warn'); fr.textContent = '⚠ ' + t('finalsResetConfirm'); return; }
+      if (!fr.dataset.confirm) { fr.dataset.confirm = '1'; fr.classList.add('warn'); fr.textContent = '' + t('finalsResetConfirm'); return; }
       try { localStorage.removeItem(FINALS_KEY); } catch (e) {}
       updateMascotItems();
       toast(t('finalsResetDone'), true);
@@ -10534,7 +10467,7 @@
       `<div class="pk-body pk-choice">` +
       opt('bdMain', t('bdMainName'), `${s.jokers.length}/${Game.slotCap()}`, t('bdMainDesc'), mainFull) +
       opt('bdBackup', t('bdBackupName'), `${s.backup.length}/${MAX_BACKUP}`, t('bdBackupDesc'), backFull) +
-      (swaps.length ? opt('bdSwap', t('bdSwapName'), `${canSwap ? cheapest : item.price} ${COIN}`, t('bdSwapDesc'), !canSwap) : '') +
+      (swaps.length ? opt('bdSwap', t('bdSwapName'), `${COIN}${canSwap ? cheapest : item.price}`, t('bdSwapDesc'), !canSwap) : '') +
       `</div>` +
       `<div class="pk-foot"><button class="btn ghost" id="bdCancel">${t('cancel')}</button></div></div>`;
     document.body.appendChild(ov);
@@ -10622,7 +10555,7 @@
   /* PLAYTEST 20 · GRUP N — envanterde yer yoksa ödül coin'e çevrilir;
      oyuncu paketten "hiçbir şey çıkmadı" sanmasın diye açıkça yazılır. */
   function packOutHtml(x) {
-    if (x.converted) return `💰 +${x.coins} <small>${t('packConverted')}</small>`;
+    if (x.converted) return `+$${x.coins} <small>${t('packConverted')}</small>`;
     if (x.type === 'consum')
       return `${x.icon} ${T.consumName(x.key, x.name)}<br><small>${T.rarity(x.rarity)}</small>`;
     if (x.type === 'joker')
@@ -10650,8 +10583,7 @@
   function packFaceHtml(x) {
     /* GRUP N (P20): coin'e çevrilen ödül kendi kart yüzünü taşır. */
     if (x.converted)
-      return `<div class="pk-ico">💰</div>` +
-        `<div class="pk-name">+${x.coins}</div>` +
+      return `<div class="pk-name">+$${x.coins}</div>` +
         `<div class="pk-sub">${t('packConverted')}</div>`;
     if (x.type === 'consum') {
       /* Değnek çizimi (2026-09-09) — özel taşın küçük yüz kalıbıyla aynı
@@ -10763,7 +10695,7 @@
     const ov = document.createElement('div');
     ov.id = 'altarOv';
     ov.className = 'pk-ov tone-violet altar-ov';
-    ov.innerHTML = `<div class="pk-box"><div class="pk-title">🜏 ${t('altarTitle')}</div>`
+    ov.innerHTML = `<div class="pk-box"><div class="pk-title">${t('altarTitle')}</div>`
       + `<div class="pk-sub-title">${t('altarSub', Game.curseLevel())}</div><div class="pk-body pk-choice"></div>`
       + `<div class="pk-foot"><button class="ep-btn ep-blue altar-close">${t('altarLeave')}</button></div></div>`;
     const body = ov.querySelector('.pk-body');
@@ -10801,11 +10733,11 @@
     ov.id = 'takasOv';
     ov.className = 'pk-ov tone-violet altar-ov mg-ov';
     const boxFace = (c) => c.kind === 'item' ? `<div class="tk-in">${c.item && c.item.type === 'joker' && JOKER_ART.has(c.item.key) ? `<div class="col-jk-art jk-${c.item.key} tk-art"></div>` : `<div class="tk-ico">${(c.item && c.item.icon) || '🃏'}</div>`}<b>${c.item ? (c.item.type === 'consum' ? T.consumName(c.item.key, c.item.name) : c.item.type === 'joker' ? T.name(c.item) : c.item.name) : ''}</b></div>`
-      : c.kind === 'coin' ? `<div class="tk-in"><div class="tk-ico">💰</div><b>+${c.coin} coin</b></div>`
-      : `<div class="tk-in pen"><div class="tk-ico">☠</div><b>${t('takasPen_' + c.pen)}</b></div>`;
+      : c.kind === 'coin' ? `<div class="tk-in"><b>+$${c.coin}</b></div>`
+      : `<div class="tk-in pen"><b>${t('takasPen_' + c.pen)}</b></div>`;
     const draw = () => {
       const s2 = Game.takasState();
-      ov.innerHTML = `<div class="pk-box"><div class="pk-title">🎁 ${t('takasTitle')}</div>`
+      ov.innerHTML = `<div class="pk-box"><div class="pk-title">${t('takasTitle')}</div>`
         + `<div class="pk-sub-title">${t('takasSub')}</div><div class="pk-body pk-choice tk-row"></div>`
         + `<div class="pk-foot"><span class="pk-hint">${s2 && s2.peeked == null ? t('takasPeekHint', s2.peekCost) : t('takasPickHint')}</span></div></div>`;
       const row = ov.querySelector('.tk-row');
@@ -10844,7 +10776,7 @@
     const ov = document.createElement('div');
     ov.id = 'falOv';
     ov.className = 'pk-ov tone-violet altar-ov mg-ov';
-    ov.innerHTML = `<div class="pk-box"><div class="pk-title">🦴 ${t('falTitle')}</div><div class="pk-sub-title">${t('falSub')}</div>`
+    ov.innerHTML = `<div class="pk-box"><div class="pk-title">${t('falTitle')}</div><div class="pk-sub-title">${t('falSub')}</div>`
       + `<div class="pk-body fal-body"></div><div class="fal-timer"><i></i></div>`
       + `<div class="pk-foot"><button class="ep-btn ep-blue fal-skip">${t('falSkip')}</button><button class="ep-btn fal-play">${t('falPlay')}</button></div></div>`;
     const body = ov.querySelector('.fal-body'), foot = ov.querySelector('.pk-foot'), bar = ov.querySelector('.fal-timer i');
@@ -11128,7 +11060,7 @@
          etiketleri (indirim, ACİL RAF, sızdırıldı, kilit, Kara Pazar) tooltip'in
          kategori satırına geçti; YENİ rozeti ve kilit düğmesi kartta kalır. */
       const tags = `${item.discounted ? ' · ' + t('discounted') : ''}${item.catchUp ? ' · ' + t('catchUpTag') : ''}` +
-        `${item.leaked ? ' · 🗣' : ''}${item.locked ? ' · 🔒' : ''}${s.store.anarchist ? ' · ⚡' : ''}`;
+        `${item.leaked ? ' · sızdı' : ''}${item.locked ? ' · kilitli' : ''}${s.store.anarchist ? ' · Anarşist' : ''}`;
       const jArt = !disguised && JOKER_ART.has(item.key);
       card.classList.add('art-card');
       /* P67 — açık kart: gömme alanda büyük görsel, altında satın al düğmesi,
@@ -11184,7 +11116,7 @@
           hb.addEventListener('click', () => {
             const r = Game.haggleItem(i);
             if (!r.ok) { toast(T.ev(r.error)); return; }
-            toast(r.success ? t('haggleWin', T.ev(r.name), r.price) : t('haggleLose', T.ev(r.name)), r.success);
+            toast(r.success ? t('haggleWin', T.ev(r.name), r.price) : t('haggleLose', T.ev(r.name)), true);
             renderStore();
           });
           card.appendChild(hb);
@@ -11197,7 +11129,7 @@
           fb.addEventListener('click', () => {
             const r = Game.stealFire(i);
             if (!r.ok) { toast(T.ev(r.error)); return; }
-            toast(r.success ? t('stealWin', T.ev(r.name)) : t('stealLose', T.ev(r.name)), r.success);
+            toast(r.success ? t('stealWin', T.ev(r.name)) : t('stealLose', T.ev(r.name)), true);
             renderStore();
             if (r.success) onJokerGained(r.key, r.jokerId);
           });
@@ -11221,7 +11153,7 @@
       card.classList.add('st-it');
       card.innerHTML = cArt
         ? `<div class="st-frame"><div class="s-ico ico-consum cs-art cs-${c.key}"></div></div>`
-        : `<div class="s-rarity">${T.rarity(c.rarity || 'common')} · ${t('consumRarity')}${s.store.anarchist ? ' · ⚡' : ''}</div>` +
+        : `<div class="s-rarity">${T.rarity(c.rarity || 'common')} · ${t('consumRarity')}${s.store.anarchist ? ' · Anarşist' : ''}</div>` +
           `<div class="st-frame"><div class="s-ico ico-consum">${c.icon}</div></div>` +
           `<div class="s-name">${T.consumName(c.key, c.name)}</div>` +
           chipsHtml(T.consumDesc(c.key, c.desc));
@@ -11229,7 +11161,7 @@
          KALDIRILDI — aynı bilgi zaten TÜKETİLEBİLİR başlığının yanındaki
          sayaçta (0/3) duruyor, açıklamada tekrar etmesi gürültüydü. */
       attachTip(card, { name: T.consumName(c.key, c.name),
-        rarityText: `${T.rarity(c.rarity || 'common')} · ${t('consumTag')}${s.store.anarchist ? ' · ⚡' : ''}`,
+        rarityText: `${T.rarity(c.rarity || 'common')} · ${t('consumTag')}${s.store.anarchist ? ' · Anarşist' : ''}`,
         accent: c.rarity || 'common',
         desc: T.consumDesc(c.key, c.desc) }, {});
       if (c.sold) {
@@ -11284,7 +11216,7 @@
           desc: pk.contents.map(packOutLine).join(' · ') }, {});
       } else {
         card.innerHTML =
-          `<div class="s-rarity">${t('packRarity_' + pk.kind)}${s.store.anarchist ? ' · ⚡' : ''}</div>` +
+          `<div class="s-rarity">${t('packRarity_' + pk.kind)}${s.store.anarchist ? ' · Anarşist' : ''}</div>` +
           `<div class="st-frame"><div class="s-ico ico-pack">${def.icon}</div></div>` +
           /* GRUP G (2026-09-07): `.pack-q` gizem tipografisidir (19px,
              harf arası 2px, sallanma) ve yalnız "???" adlı paketlere
@@ -11536,7 +11468,7 @@
       if (e.boss) parts.push(`${t('rpBoss')} ${T.bossName(e.boss, (JOKER_DEFS[e.boss] || {}).name || e.boss)}`);
       if (e.bet) parts.push(`${t('rpBet')} ${T.ev(BETS[e.bet] ? BETS[e.bet].name : e.bet)}`);
       if (e.katla) parts.push(t('rpKatla', e.katla));
-      if (e.rulet) parts.push(t('rpRulet', e.rulet === 'red' ? '🔴' : '⚫'));
+      if (e.rulet) parts.push(t('rpRulet', e.rulet === 'red' ? t('cRed') : t('cBlack')));
       if (e.side) parts.push(t('rpSide', String(T.ev(SIDE_NAME(e.side.key))), e.side.odds,
         e.side.hit == null ? '…' : e.side.hit ? `✔ +${e.side.paid}` : `✘ −${e.side.stake}`));
       if (e.bj) parts.push(t('rpBj', t('bjRes_' + e.bj.result, Math.abs(e.bj.net)), e.bj.net >= 0 ? `+${e.bj.net}` : `${e.bj.net}`));
@@ -11595,7 +11527,7 @@
     SFX.lose();
     const boss = Game.isBossRound && Game.isBossRound() && s.boss;
     const art = boss && JOKER_ART.has(s.boss.key)
-      ? `<div class="ep-def-art art-joker jk-${s.boss.key}"></div>` : `<div class="ep-def-ico">${boss ? '👹' : '🎯'}</div>`;
+      ? `<div class="ep-def-art art-joker jk-${s.boss.key}"></div>` : '';
     const why = s.bossFail ? T.ev(s.bossFail)
       : s.katla ? t('katlaLostBody', s.katla.base, s.target)
       : t('epScoreOf', s.score, s.target);
@@ -11660,7 +11592,7 @@
       + (s.seed ? epRow(t('seedLabel'), `<span class="ep-seed">${s.seed}</span><button type="button" class="ep-seed-copy" data-seed="${s.seed}">${t('seedCopy')}</button>`, '', true) : '');   // P114;
     const lb = s.boss;
     const lbArt = lb && JOKER_ART.has(lb.key)
-      ? `<div class="ep-def-art art-joker jk-${lb.key}"></div>` : `<div class="ep-def-ico">🏆</div>`;
+      ? `<div class="ep-def-art art-joker jk-${lb.key}"></div>` : '';
     const right =
       epRow(t('epStage'), st.stage + `<small>${st.stageOf}</small>`, 'c-orange') +
       epRow(t('epRound'), st.round, 'c-orange') +
@@ -11668,7 +11600,7 @@
       `<div class="ep-defeat ep-trophy"><div class="ep-def-title">${t('epLastBoss')}</div>`
       + `<div class="ep-def-name">${lb ? T.bossName(lb.key, lb.name) : '—'}</div>` + lbArt + `</div>`;
     const foot =
-      (finNew ? `<div class="ep-note ep-final">${t('finalUnlocked', T.bossName(finKey, FINAL_BOSSES[finKey]?.name || finKey), FINAL_BOSSES[finKey]?.icon || '★')}</div>` : '') +   // denetim3 #26
+      (finNew ? `<div class="ep-note ep-final">${t('finalUnlocked', T.bossName(finKey, FINAL_BOSSES[finKey]?.name || finKey))}</div>` : '') +   // denetim3 #26
       (openedModes.length ? `<div class="ep-note">${t('modeUnlocked', openedModes.map(m => t('modeName_' + m.key)).join(', '))}</div>` : '') +
       /* Sonsuz Mod AYRI BİR MOD DEĞİL (P53): menüde düğmesi yok, yalnız burada bir SEÇİM. */
       (canEndless ? `<button class="ep-btn ep-blue" id="rcEndless">${t('epEndless')}</button>`
@@ -11732,7 +11664,7 @@
     const already = !!s.upgradeOffer.applied;
     $('upTitle').textContent = t('upTitle');
     $('upSub').textContent = already ? t('upSubDone') : t('upSubAuto', s.upgradeOffer.rolled.length);
-    el.upCoins.innerHTML = `${COIN} ${s.coins}`;
+    el.upCoins.innerHTML = `${COIN}${s.coins}`;
     el.upOptions.innerHTML = '';
     const allKeys = Object.keys(UPGRADE_DEFS);
     const reels = [];
@@ -11806,7 +11738,7 @@
     SFX.win();
     notify(r.notes);
     el.btnUpContinue.disabled = false;
-    el.upCoins.innerHTML = `${COIN} ${Game.state.coins}`;   // Coin Kasası anında yansısın
+    el.upCoins.innerHTML = `${COIN}${Game.state.coins}`;   // Coin Kasası anında yansısın
     $('upSub').textContent = t('upSubDone');
     saveGame('inStore');
   }
@@ -11988,16 +11920,16 @@
      (kullanıcı kararı). Tüccar / Öteki Dünya'da yalnız çizim değişir → etki
      yerine "ne zaman görünür". Yeni varyant = buraya bir satır (+ i18n). */
   const JOKER_VARIANTS = {
-    truva: { icon: '🎁', list: () => Object.entries(Game.PANDORA_INFO || {}).map(([k, v]) => ({
+    truva: { list: () => Object.entries(Game.PANDORA_INFO || {}).map(([k, v]) => ({
       art: 'jk-truva pd-' + k, name: T.ev(v.name).split(' — ').pop(), desc: T.ev(v.desc) })) },
-    corporates: { icon: '🏢', list: () => (Game.corpsInfo ? Game.corpsInfo() : []).map((c) => ({
+    corporates: { list: () => (Game.corpsInfo ? Game.corpsInfo() : []).map((c) => ({
       art: 'jk-corporates corp-' + c.key, name: T.ev(c.name).replace(/^\S+\s/, ''),
       desc: t('corpTipDesc', T.ev(c.text), T.ev(c.rewardText), T.ev(c.penaltyText)) })) },
-    misunderstood: { icon: '🎭', list: () => [{ art: 'jk-misunderstood misu-v2', name: t('varName_misu'), desc: t('varDesc_misu') }] },
-    tuccar: { icon: '💼', list: () => [{ art: 'jk-tuccar tuccar-v2', name: t('varName_tuccar'), desc: t('varDesc_tuccar') }] },
-    otekiDunya: { icon: '🌙', list: () => [{ art: 'jk-otekiDunya oteki-flip', name: t('varName_oteki'), desc: t('varDesc_oteki') }] },
+    misunderstood: { list: () => [{ art: 'jk-misunderstood misu-v2', name: t('varName_misu'), desc: t('varDesc_misu') }] },
+    tuccar: { list: () => [{ art: 'jk-tuccar tuccar-v2', name: t('varName_tuccar'), desc: t('varDesc_tuccar') }] },
+    otekiDunya: { list: () => [{ art: 'jk-otekiDunya oteki-flip', name: t('varName_oteki'), desc: t('varDesc_oteki') }] },
     /* denetim3 #50 — Bukalemun renkleri koleksiyonda görünür (Damga'nın aşamaları görünmez — kullanıcı 2026-10-23) */
-    terzi: { icon: '🦎', list: () => ['red', 'blue', 'yellow', 'black'].map((c) => ({ art: 'jk-terzi bk-' + c, name: T.color(c), desc: t('varDesc_terzi') })) },
+    terzi: { list: () => ['red', 'blue', 'yellow', 'black'].map((c) => ({ art: 'jk-terzi bk-' + c, name: T.color(c), desc: t('varDesc_terzi') })) },
   };
   function showVariants(def) {
     const V = JOKER_VARIANTS[def.key];
@@ -12010,7 +11942,7 @@
     ov.className = 'pk-ov tone-gold var-ov';
     ov.innerHTML =
       `<div class="pk-box">` +
-      `<div class="pk-title">${V.icon} ${t(list.length > 1 ? 'varTitle' : 'varTitle1')}</div>` +
+      `<div class="pk-title">${t(list.length > 1 ? 'varTitle' : 'varTitle1')}</div>` +   // P142 — başlıkta simge yok
       `<div class="pk-sub-title">${t('varSub_' + def.key)}</div>` +
       `<div class="pk-body pk-choice"></div>` +
       `<div class="pk-foot"><button class="btn ghost var-close">${t('varClose')}</button></div></div>`;
@@ -12121,7 +12053,7 @@
     c.dataset.track = d.key;
     const art = d.boss && JOKER_ART.has(d.boss)
       ? `<div class="cm-art s-jk-art jk-${d.boss}"></div>`
-      : `<div class="cm-art cm-note">${d.rarity === 'store' ? '🛒' : d.rarity === 'boss' ? '👹' : '🎵'}</div>`;
+      : `<div class="cm-art cm-note"></div>`;
     c.innerHTML = art + `<div class="cm-txt"><b title="${d.name}">${d.name}</b><small>${d.desc}</small></div>`
       + `<button class="cm-play">▶</button>`;
     c.querySelector('.cm-play').addEventListener('click', () => {
@@ -12225,7 +12157,7 @@
       const it = c.items();
       return c.disc ? { k: it.filter((d) => Disc.known(d._disc || c.disc, d)).length, n: it.length } : { k: null, n: it.length };
     };
-    const colBar = (k, n) => `<span class="cc-bar"><i style="width:${n ? Math.round((k / n) * 100) : 0}%"></i></span>`;
+    const colBar = (k, n) => `<span class="col-prog"><i style="width:${n ? Math.round((k / n) * 100) : 0}%"></i></span>`;
     if (colView === 'hub') {
       $('colSub').textContent = t('colHubSub');
       let K = 0, N = 0;
@@ -12297,7 +12229,7 @@
       for (const m of cat.items()) {
         const row = document.createElement('div');
         row.className = 'cm-row' + (m.open ? '' : ' locked');
-        row.innerHTML = `<span class="cm-ico">${m.open ? '🔓' : '🔒'}</span><span class="cm-name">${t('modeName_' + m.key)}</span>`
+        row.innerHTML = `<span class="cm-name">${t('modeName_' + m.key)}</span>`
           + `<span class="cm-note">${m.never ? t('modeAlwaysOpen') : m.open ? (m.done ? t('modeDone') : t('modeOpen')) : t('modeLockedTip')}</span>`;
         wrap.appendChild(row);
       }
@@ -12348,7 +12280,6 @@
         const row = document.createElement('div');
         row.className = 'cm-row' + (m.open ? '' : ' locked');
         row.innerHTML =
-          `<span class="cm-ico">${m.open ? '🔓' : '🔒'}</span>` +
           `<span class="cm-name">${t('modeName_' + m.key)}</span>` +
           `<span class="cm-note">${m.never ? t('modeAlwaysOpen')
             : m.open ? (m.done ? t('modeDone') : t('modeOpen')) : t('modeLockedTip')}</span>`;
@@ -12365,7 +12296,7 @@
       const head = document.createElement('div');
       head.className = `col-rar-head tr-${rar === 'casino' ? 'legendary col-casino-head' : rar}`;
       if (rar === 'casino') {
-        head.innerHTML = `🎰 ${t('colCasino')} <span>${t('colCount', defs.length)}</span><small>${t('colCasinoNote')}</small>`;
+        head.innerHTML = `${t('colCasino')} <span>${t('colCount', defs.length)}</span><small>${t('colCasinoNote')}</small>`;
         el.colBody.appendChild(head);
         const grid = document.createElement('div');
         grid.className = 'col-grid tr-col-tiles col-casino';
@@ -13119,6 +13050,66 @@
     fitBossNames();
   }
   el.btnTrainer.addEventListener('click', () => showTrainerSetup());
+  /* PERF (2026-11-26, kullanıcı: "ilk tıklayışımda takılarak açılıyor") — Trainer kurulumu /
+     koleksiyon ~120 piksel-art joker SVG'sini (biri 650 KB) birden çizer; ilk açılışta hepsi o an
+     okunup ayrıştırılıyordu. Kaydırırken de her yeni görünen kart için SVG'nin binlerce piksel
+     parçası baştan çiziliyordu ("yukarı aşağı kaydırırken kasıyor").
+     ÇÖZÜM: menüdeyken boşta, her joker SVG'si bir kez 3× ölçekte PNG'ye çevrilir ve CSS'teki
+     aynı kurallar (aynı seçici, sonra eklenen sayfa → kazanır) PNG'yi gösterir. Kaynak dosyalar
+     SVG kalır; çizim değişince hiçbir şey yeniden üretilmez. Tuval kirlenir / tarayıcı izin
+     vermezse sessizce SVG ile devam edilir. */
+  (function prewarmJokerArt() {
+    const idle = window.requestIdleCallback || ((f) => setTimeout(() => f({ timeRemaining: () => 8 }), 200));
+    const SCALE = 3;
+    idle(() => {
+      const urls = new Set(), hits = [];
+      const re = /url\(['"]?(assets\/game\/joker\/[^'")]+\.svg)['"]?\)/g;
+      for (const sh of document.styleSheets) {
+        let rules; try { rules = sh.cssRules; } catch (e) { continue; }
+        for (const r of rules) {
+          if (!r.style || !r.selectorText || !r.cssText.includes('assets/game/joker/')) continue;
+          for (let i = 0; i < r.style.length; i++) {
+            const prop = r.style[i], val = r.style.getPropertyValue(prop);
+            if (!val.includes('assets/game/joker/')) continue;
+            hits.push({ sel: r.selectorText, prop, val, imp: r.style.getPropertyPriority(prop) });
+            for (const m of val.matchAll(re)) urls.add(m[1]);
+          }
+        }
+      }
+      const list = [...urls], png = new Map();
+      window.__jkArtWarm = png;
+      const finish = () => {
+        if (!png.size) return;
+        const css = hits.map((h) => {
+          const v = h.val.replace(re, (all, u) => (png.has(u) ? `url("${png.get(u)}")` : all));
+          return v === h.val ? '' : `${h.sel}{${h.prop}:${v}${h.imp ? ' !important' : ''}}`;
+        }).join('\n');
+        const st = document.createElement('style');
+        st.id = 'jkArtBitmaps';
+        st.textContent = css;
+        document.head.appendChild(st);
+      };
+      const next = () => {
+        if (!list.length) { finish(); return; }
+        const u = list.shift();
+        const im = new Image();
+        im.src = u;
+        (im.decode ? im.decode() : new Promise((ok, no) => { im.onload = ok; im.onerror = no; }))
+          .then(() => new Promise((ok) => {
+            const w = (im.naturalWidth || 81) * SCALE, h = (im.naturalHeight || 110) * SCALE;
+            const cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            const cx = cv.getContext('2d');
+            cx.imageSmoothingEnabled = false;
+            cx.drawImage(im, 0, 0, w, h);
+            cv.toBlob((b) => { if (b) png.set(u, URL.createObjectURL(b)); ok(); }, 'image/png');
+          }))
+          .catch(() => {})   // tuval kirli / görsel yok → bu joker SVG ile kalır
+          .then(() => idle(next, { timeout: 1000 }));
+      };
+      next();
+    }, { timeout: 3000 });
+  })();
   // çizimsiz joker kutuları: piksel yazı geniş — uzun ad (Silahşorlar) kutuya sığana kadar küçülür
   function fitTileNames(root) {
     const run = () => root.querySelectorAll('.tr-col-tiles .jt-name').forEach(n => fitText(n, 11, 7));
@@ -13342,12 +13333,12 @@
     showRoundEnd, showRunComplete, showPilePopup, fitLabels: fitActionLabels,
     pickOkeySlot,   // okey yerleşim penceresi (görsel test)
     showFeda, showCocukBanner,   // Lanetli Çocuk (görsel test)
+    showTuccarOffer,   // P142 — teklif penceresi (görsel test)
     // Playtest 17 — Grup A/F doğrulaması için
     notify, showCoinFlip, pickFuzyon, flushRoundStart,
     // Playtest 19 — Grup E: Füzyon kullanım menüsü
     fuzyonMenu,
-    // Playtest 19 — Grup G: The Cheating bildirimi
-    cheatFlash, goNextRound,
+    stealFlash, goNextRound,
     // P37 — bildirim kartları kapalı; eski testler kendi kontrolleri için açar
     setNotes: (on) => { NOTES_ENABLED = !!on; },
     // Playtest 18 — Grup E: dil değişimini test tarafında da gerçek akışla uygula

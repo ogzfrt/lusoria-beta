@@ -15,6 +15,25 @@
   /* her madde: [etiket, TR başlık, TR açıklama, EN başlık, EN açıklama, ('proto' → betada gizli)] */
   const TUM_NOTLAR = [
     {
+      id: '2026-11-28', date: { tr: '28 Kasım', en: 'November 28' },
+      items: [
+        ['degisti', 'Zombie', 'Zombie taşı ve her enfekte taş, her tur sağındaki ve solundaki taşa bulaşır (sahte okey dahil). Yanında taş olmayan taş kimseye bulaştıramaz.',
+          'Zombie', 'The Zombie tile and every infected tile infect the tiles on their left and right every turn (fake okey included). A tile with no neighbours infects no one.'],
+        ['degisti', 'Şimşek Avcısı', 'Yem seçimi kalktı: işlek tutarsa ceza yerine o kadar puan kazanırsın.',
+          'Storm Chaser', 'No more bait: if the trap hits, you gain its penalty as points instead.'],
+        ['degisti', 'Kâbus', 'Kâbus Taşı okey gibi kullanılır, açılımda +2.0x verir; raund sonuna kadar açmazsan lanet +1.',
+          'Nightmare', 'The Nightmare Tile works like an okey and gives +2.0x when melded; leave it unopened until round end and curse +1.'],
+        ['degisti', 'Daha sade arayüz', 'Emoji ve simgeler kalktı, bütün yazılar oyunun fontunda; coin artık $ ile gösteriliyor. Tüccar penceresi yenilendi.',
+          'Cleaner interface', 'Emojis and icons are gone, all text uses the game font and coins show as $. The Merchant window was redesigned.'],
+        ['duzeldi', 'Sessiz raund cezası', 'Sessiz raundu geç bitirince bir lanetli eşya sonraki raund gerçekten susuyor.',
+          'Silent round penalty', 'Finishing a Silent Round late now really silences one cursed item next round.'],
+        ['duzeldi', 'Taş görünümleri', 'Atılan taş artık ıstakadakiyle aynı boyda; raund kaybında ıstakada boş yuvalar kalmıyor.',
+          'Tile visuals', 'The discarded tile now matches rack tiles; no empty gaps are left on the rack when a round is lost.'],
+        ['degisti', 'Kayıt', 'Kayıt biçimi yenilendi: bu güncellemeden önce yarım kalan run açılmaz, yeni run başlar. Açtığın kartlar ve final ödülleri yerinde.',
+          'Save', 'The save format was renewed: a run left unfinished before this update will not resume, a new run starts. Your unlocks and finale rewards stay.'],
+      ],
+    },
+    {
       id: '2026-11-25b', date: { tr: '25 Kasım', en: 'November 25' },
       items: [
         ['degisti', 'Koleksiyon yenilendi', 'Toplam keşif çubuğu, kategorilerde keşif çubukları ve keşfettiğin jokerlerden bir yelpaze; sayfalar artık noktalarla. Değnekler bölümünün adı Tılsımlar oldu, Değnek / Totem sekmeleriyle.',
